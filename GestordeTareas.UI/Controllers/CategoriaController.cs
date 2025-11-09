@@ -19,10 +19,10 @@ namespace GestordeTareas.UI.Controllers
         public async Task<ActionResult> Index()
         {
             var categorias = await _categoriaBL.GetAllAsync();
-            return View(categorias);
+            return View("Index", categorias);
         }
 
-        public async Task<ActionResult> DetailsPartial(int id)
+        public async Task<ActionResult> Details(int id)
         {
             var categoria = await _categoriaBL.GetById(new Categoria { Id = id });
             return PartialView("Details", categoria);

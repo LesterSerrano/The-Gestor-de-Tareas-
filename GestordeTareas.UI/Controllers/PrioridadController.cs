@@ -19,10 +19,10 @@ namespace GestordeTareas.UI.Controllers
         public async Task<ActionResult> Index()
         {
             var lista = await _prioridadBL.GetAllAsync();
-            return View(lista);
+            return View("Index", lista);
         }
 
-        public async Task<ActionResult> DetailsPartial(int id)
+        public async Task<ActionResult> Details(int id)
         {
             var prioridad = await _prioridadBL.GetById(new Prioridad { Id = id });
             return PartialView("Details", prioridad);

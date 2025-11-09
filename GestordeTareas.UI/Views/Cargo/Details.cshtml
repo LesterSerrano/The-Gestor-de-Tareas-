@@ -1,14 +1,11 @@
 ﻿@model GestordeTaras.EN.Cargo
 
-@{
-    ViewData["Title"] = "Detalles del Cargo";
-}
-<div>
+<div class="p-2">
+    <dl class="grid grid-cols-3 gap-y-3">
+        <dt class="font-semibold text-gray-700">ID:</dt>
+        <dd class="col-span-2 text-gray-600">@Model.Id</dd>
 
-    <dl class="row">
-        <dt class="col-sm-3">ID:</dt>
-        <dd class="col-sm-9">@Model.Id</dd>
-        <dt class="col-sm-3">Nombre:</dt>
-        <dd class="col-sm-9">@Model.Nombre</dd>
+        <dt class="font-semibold text-gray-700">Nombre:</dt>
+        <dd class="col-span-2 text-gray-600">@Model.Nombre</dd>
     </dl>
 </div>

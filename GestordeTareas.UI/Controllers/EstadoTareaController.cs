@@ -19,7 +19,7 @@ namespace GestordeTareas.UI.Controllers
         public async Task<ActionResult> Index()
         {
             var lista = await _estadoTareaBL.GetAllAsync();
-            return View(lista);
+            return View("Index", lista);
         }
 
         public async Task<ActionResult> Details(int id)
