@@ -2,7 +2,6 @@
 using GestordeTareas.BL;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GestordeTareas.UI.Controllers
@@ -14,38 +13,33 @@ namespace GestordeTareas.UI.Controllers
 
         public CargoController()
         {
-            _cargoBL = new CargoBL(); // Inicializamos la capa de negocio
+            _cargoBL = new CargoBL();
         }
 
-        // GET: CargoController
         public async Task<ActionResult> Index()
         {
-            List<Cargo> Lista = await _cargoBL.GetAllAsync();
-
-            return View(Lista);
+            var cargos = await _cargoBL.GetAllAsync();
+            return View(cargos);
         }
 
-        // GET: CargoController/Details/5
         public async Task<ActionResult> Details(int id)
         {
             var cargo = await _cargoBL.GetById(new Cargo { Id = id });
             return PartialView("Details", cargo);
         }
 
-        // GET: CargoController/Create
         public ActionResult Create()
         {
             return PartialView("Create");
         }
 
-        // POST: CargoController/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Create(Cargo cargo)
         {
             try
             {
-                int result = await _cargoBL.CreateAsync(cargo);
+                await _cargoBL.CreateAsync(cargo);
                 return Json(new { success = true, message = "Cargo creado correctamente." });
             }
             catch (Exception ex)
@@ -55,21 +49,19 @@ namespace GestordeTareas.UI.Controllers
             }
         }
 
-        // GET: CargoController/Edit/5
         public async Task<ActionResult> Edit(int id)
         {
             var cargo = await _cargoBL.GetById(new Cargo { Id = id });
             return PartialView("Edit", cargo);
         }
 
-        // POST: CargoController/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Edit(int id, Cargo cargo)
         {
             try
             {
-                int result = await _cargoBL.UpdateAsync(cargo);
+                await _cargoBL.UpdateAsync(cargo);
                 return Json(new { success = true, message = "Cargo editado correctamente." });
             }
             catch (Exception ex)
@@ -79,15 +71,12 @@ namespace GestordeTareas.UI.Controllers
             }
         }
 
-        // GET: CargoController/Delete/5
         public async Task<ActionResult> Delete(int id)
         {
             var cargo = await _cargoBL.GetById(new Cargo { Id = id });
             return PartialView("Delete", cargo);
-
         }
 
-        // POST: CargoController/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Delete(int id, Cargo cargo)

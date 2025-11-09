@@ -14,6 +14,15 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
 var configuration = builder.Configuration;
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddScoped<UsuarioBL>();
+builder.Services.AddScoped<ProyectoBL>();
+builder.Services.AddScoped<TareaBL>();
+builder.Services.AddScoped<CargoBL>();
+builder.Services.AddScoped<ProyectoUsuarioBL>();
+builder.Services.AddScoped<ElegirTareaBL>();
+builder.Services.AddScoped<CategoriaBL>();
+builder.Services.AddScoped<PrioridadBL>();
+builder.Services.AddScoped<EstadoTareaBL>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IEmailTemplateService, EmailTemplateService>();
 // configurar la autenticaci�n

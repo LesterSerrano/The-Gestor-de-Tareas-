@@ -17,8 +17,6 @@ namespace GestordeTareas.UI.Controllers
         private readonly TareaBL _tareaBL;
         private readonly ProyectoUsuarioBL _proyectoUsuarioBL;
 
-
-
         public HomeController(ILogger<HomeController> logger)
         {
             _logger = logger;
@@ -30,61 +28,47 @@ namespace GestordeTareas.UI.Controllers
 
         public async Task<IActionResult> Index()
         {
-            // Obtener los datos de usuarios, proyectos, tareas y los usuarios unidos a los proyectos
             var usuarios = await _usuarioBL.GetAllAsync();
             var proyectos = await _proyectoBL.GetAllAsync();
             var tareas = await _tareaBL.GetAllAsync();
             var usuariosPorProyecto = await _proyectoUsuarioBL.ObtenerTodosAsync();
 
-            // Obtener el total de usuarios, proyectos y tareas
             ViewBag.TotalUsuarios = usuarios.Count;
             ViewBag.TotalProyectos = proyectos.Count;
             ViewBag.TotalTareas = tareas.Count;
 
-            // Preparar un diccionario para las tareas por proyecto
             var tareasPorProyecto = proyectos.ToDictionary(
-                p => p.Titulo,  // Título del proyecto
+                p => p.Titulo,
                 p => new
                 {
-                    TotalTareas = tareas.Count(t => t.IdProyecto == p.Id), // Total de tareas por proyecto
+                    TotalTareas = tareas.Count(t => t.IdProyecto == p.Id),
                     Pendientes = tareas.Count(t => t.IdProyecto == p.Id && t.EstadoTarea != null && t.EstadoTarea.Nombre == "Pendiente"),
                     EnProceso = tareas.Count(t => t.IdProyecto == p.Id && t.EstadoTarea != null && t.EstadoTarea.Nombre == "En Proceso"),
                     Finalizadas = tareas.Count(t => t.IdProyecto == p.Id && t.EstadoTarea != null && t.EstadoTarea.Nombre == "Finalizada")
                 }
             );
 
-            // Calcular la barra de progreso por proyecto basado en las tareas finalizadas
             var progresoPorProyecto = proyectos.ToDictionary(
                 p => p.Titulo,
                 p =>
                 {
                     var totalTareas = tareas.Count(t => t.IdProyecto == p.Id);
                     var tareasFinalizadas = tareas.Count(t => t.IdProyecto == p.Id && t.EstadoTarea != null && t.EstadoTarea.Nombre == "Finalizada");
-
-                    return totalTareas == 0 ? 0 : (int)((double)tareasFinalizadas / totalTareas * 100); // Porcentaje de progreso
+                    return totalTareas == 0 ? 0 : (int)((double)tareasFinalizadas / totalTareas * 100);
                 }
             );
 
-            // Recuperar los usuarios unidos a los proyectos (relación ProyectoUsuario)
-            var usuariosPorProyectoDiccionario = new Dictionary<string, int>();
-            foreach (var proyecto in proyectos)
-            {
-                var usuariosDelProyectoCount = usuariosPorProyecto
-                    .Count(pu => pu.IdProyecto == proyecto.Id); // Contamos cuántos usuarios están unidos al proyecto
+            var usuariosPorProyectoDiccionario = proyectos.ToDictionary(
+                p => p.Titulo,
+                p => usuariosPorProyecto.Count(pu => pu.IdProyecto == p.Id)
+            );
 
-                usuariosPorProyectoDiccionario.Add(proyecto.Titulo, usuariosDelProyectoCount);
-            }
-
-            // Pasar los datos a la vista a través de ViewBag
             ViewBag.TareasPorProyecto = tareasPorProyecto;
             ViewBag.ProgresoPorProyecto = progresoPorProyecto;
             ViewBag.UsuariosPorProyecto = usuariosPorProyectoDiccionario;
 
             return View();
         }
-
-
-
 
         public IActionResult Privacy()
         {

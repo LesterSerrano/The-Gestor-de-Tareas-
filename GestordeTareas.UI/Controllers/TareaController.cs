@@ -1,10 +1,8 @@
 ﻿using GestordeTaras.EN;
 using GestordeTareas.BL;
 using GestordeTareas.DAL;
-using Humanizer;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -36,91 +34,60 @@ namespace GestordeTareas.UI.Controllers
             _elegirTareaBL = new ElegirTareaBL();
         }
 
-        // GET: TareaController
         [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
         public async Task<ActionResult> Index(int proyectoId)
         {
             if (!await VerificarAcceso(proyectoId))
             {
                 TempData["ErrorMessage"] = "No tienes acceso a este proyecto";
-                return RedirectToAction("Index", "Proyecto"); // Redirigir a la vista de proyectos
+                return RedirectToAction("Index", "Proyecto");
             }
 
-            // Aquí cargas las tareas asociadas al proyecto con el ID proporcionado
             var tareas = await _tareaBL.GetTareasByProyectoIdAsync(proyectoId);
             ViewBag.ProyectoId = proyectoId;
 
-            // Obtener el ID del usuario actual
             int idUsuarioActual = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
-            // Verificar si el usuario es encargado
-            bool esEncargado = await _proyectoUsuarioBL.IsUsuarioEncargadoAsync(proyectoId, idUsuarioActual);
-            ViewBag.EsEncargado = esEncargado;
+            ViewBag.EsEncargado = await _proyectoUsuarioBL.IsUsuarioEncargadoAsync(proyectoId, idUsuarioActual);
 
             return View(tareas);
         }
 
-        // GET: TareaController/Details/5
         public async Task<ActionResult> Details(int id)
         {
             var tarea = await _tareaBL.GetById(new Tarea { Id = id });
             return PartialView("Details", tarea);
         }
-        // Nuevo
-        private async Task<int> GetProyectoIdAsync(Proyecto proyecto)
-        {
-            var result = await _proyectoBL.GetByIdAsync(proyecto);
-            int proyectoId = Convert.ToInt32(result);
-            return proyectoId;
-        }
 
-        // GET: TareaController/Create
         public async Task<ActionResult> Create(int idProyecto)
         {
-            // Cargar las listas desplegables
             await LoadDropDownListsAsync();
-
-            // Crear una nueva instancia de Tarea con el IdProyecto proporcionado
-            var tarea = new Tarea { IdProyecto = idProyecto };
-
-            // Pasar el IdProyecto a la vista a través del ViewBag
-            ViewBag.ProyectoId = tarea.IdProyecto;
+            ViewBag.ProyectoId = idProyecto;
             ViewBag.EstadoPendienteId = await EstadoTareaDAL.GetEstadoPendienteIdAsync();
-
-            // Devolver una vista parcial con el modelo de tarea
-            return PartialView("Create", tarea);
+            return PartialView("Create", new Tarea { IdProyecto = idProyecto });
         }
 
-        // POST: TareaController/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Administrador, Colaborador")]
         public async Task<ActionResult> Create(Tarea tarea, int idProyecto)
         {
-            int idUsuario = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)); // Método que obtiene el ID del usuario actual
+            int idUsuario = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-            if (!User.IsInRole("Administrador"))
+            if (!User.IsInRole("Administrador") &&
+                !await _proyectoUsuarioBL.IsUsuarioEncargadoAsync(tarea.IdProyecto, idUsuario))
             {
-                // Verificar si el usuario es el encargado del proyecto
-                bool esEncargado = await _proyectoUsuarioBL.IsUsuarioEncargadoAsync(tarea.IdProyecto, idUsuario);
-
-                if (!esEncargado)
-                {
-                    TempData["ErrorMessage"] = "No tienes permisos para realizar cambios";
-                    return Json(new { success = false, message = "No tienes permisos para realizar cambios" });
-                }
+                return Json(new { success = false, message = "No tienes permisos para realizar cambios" });
             }
+
             try
             {
-                // Asignar el ID del proyecto a la tarea
                 tarea.IdProyecto = idProyecto;
                 tarea.FechaCreacion = DateTime.Now;
-                int estadoPendienteId = await EstadoTareaDAL.GetEstadoPendienteIdAsync();
-                tarea.IdEstadoTarea = estadoPendienteId;
+                tarea.IdEstadoTarea = await EstadoTareaDAL.GetEstadoPendienteIdAsync();
 
-                int result = await _tareaBL.CreateAsync(tarea);
+                await _tareaBL.CreateAsync(tarea);
                 TempData["SuccessMessage"] = "Tarea creada correctamente.";
                 return Json(new { success = true, message = "Tarea creada correctamente", id = idProyecto });
-
             }
             catch (Exception ex)
             {
@@ -128,109 +95,77 @@ namespace GestordeTareas.UI.Controllers
             }
         }
 
-        //MÉTODO PARA CARGAR LISTAS DESPLEGABLES SELECCIONABLES 
         private async Task LoadDropDownListsAsync()
         {
-            // Obtener todos los datos de cada una disponibles
-            var categorias = await _categoriaBL.GetAllAsync();
-            var prioridades = await _prioridadBL.GetAllAsync();
-            var estadosTarea = await _estadoTareaBL.GetAllAsync();
-            var proyectos = await _proyectoBL.GetAllAsync();
-
-            // Se crean SelectList para cada entidad con las propiedades Id como valor y Nombre como texto visible
-            ViewBag.Categorias = new SelectList(categorias, "Id", "Nombre");
-            ViewBag.Prioridades = new SelectList(prioridades, "Id", "Nombre");
-            ViewBag.EstadosTarea = new SelectList(estadosTarea, "Id", "Nombre");
-            ViewBag.Proyectos = new SelectList(proyectos, "Id", "Titulo");
+            ViewBag.Categorias = new SelectList(await _categoriaBL.GetAllAsync(), "Id", "Nombre");
+            ViewBag.Prioridades = new SelectList(await _prioridadBL.GetAllAsync(), "Id", "Nombre");
+            ViewBag.EstadosTarea = new SelectList(await _estadoTareaBL.GetAllAsync(), "Id", "Nombre");
+            ViewBag.Proyectos = new SelectList(await _proyectoBL.GetAllAsync(), "Id", "Titulo");
         }
 
-
-        // GET: TareaController/Edit/5
         public async Task<ActionResult> Edit(int id)
         {
-            var tarea = await _tareaBL.GetById(new Tarea { Id = id });
-            await LoadDropDownListsAsync(); //Se llama al método y se espera que cargue
-            return PartialView("Edit", tarea);
+            await LoadDropDownListsAsync();
+            return PartialView("Edit", await _tareaBL.GetById(new Tarea { Id = id }));
         }
 
-        // POST: TareaController/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Administrador, Colaborador")]
         public async Task<ActionResult> Edit(int id, Tarea tarea)
         {
-            int idUsuario = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)); 
+            int idUsuario = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-            if (!User.IsInRole("Administrador"))
-            {      
-                // Verificar si el usuario es el encargado del proyecto
-                bool esEncargado = await _proyectoUsuarioBL.IsUsuarioEncargadoAsync(tarea.IdProyecto, idUsuario);
-
-                if (!esEncargado)
-                {
-                    TempData["ErrorMessage"] = "No tienes permisos para realizar cambios";
-                    return Json(new { success = false, message = "No tienes permisos para realizar cambios" });
-                }
+            if (!User.IsInRole("Administrador") &&
+                !await _proyectoUsuarioBL.IsUsuarioEncargadoAsync(tarea.IdProyecto, idUsuario))
+            {
+                return Json(new { success = false, message = "No tienes permisos para realizar cambios" });
             }
 
             try
             {
-                int result = await _tareaBL.UpdateAsync(tarea);
+                await _tareaBL.UpdateAsync(tarea);
                 TempData["SuccessMessage"] = "Tarea modificada correctamente.";
                 return Json(new { success = true, message = "Tarea modificada correctamente", id = tarea.IdProyecto });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = $"Error al modificadar la tarea: {ex.Message}" });
+                return Json(new { success = false, message = $"Error al modificar la tarea: {ex.Message}" });
             }
         }
 
-
-        // GET: TareaController/Delete/5
         public async Task<ActionResult> Delete(int id)
         {
-            var tarea = await _tareaBL.GetById(new Tarea { Id = id });
-            return PartialView("Delete", tarea);
+            return PartialView("Delete", await _tareaBL.GetById(new Tarea { Id = id }));
         }
 
-        // POST: TareaController/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Administrador, Colaborador")]
         public async Task<ActionResult> Delete(int id, Tarea tarea)
         {
+            var tareaObtenida = await _tareaBL.GetById(new Tarea { Id = id });
+            if (tareaObtenida == null) return NotFound("Tarea no encontrada");
+
             int idUsuario = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-            // Obtener la tarea por ID
-            var tareaObtenida = await _tareaBL.GetById(new Tarea { Id = id });
-            if (tareaObtenida == null)
+            if (!User.IsInRole("Administrador") &&
+                !await _proyectoUsuarioBL.IsUsuarioEncargadoAsync(tareaObtenida.IdProyecto, idUsuario))
             {
-                return NotFound("Tarea no encontrada");
+                TempData["ErrorMessage"] = "No tienes permisos para realizar cambios";
+                return RedirectToAction("Index");
             }
 
-            if (!User.IsInRole("Administrador"))
-            {
-                // Verificar si el usuario es el encargado del proyecto
-                bool esEncargado = await _proyectoUsuarioBL.IsUsuarioEncargadoAsync(tareaObtenida.IdProyecto, idUsuario);
-
-                if (!esEncargado)
-                {
-                    TempData["ErrorMessage"] = "No tienes permisos para realizar cambios";
-                    return RedirectToAction("Index");
-                }
-            }
             try
             {
                 await _tareaBL.DeleteAsync(tareaObtenida);
                 TempData["SuccessMessage"] = "Tarea eliminada correctamente";
                 return RedirectToAction("Index", new { proyectoId = tareaObtenida.IdProyecto });
-
             }
             catch (Exception ex)
             {
-                ViewBag.Error = ex.Message;
-                TempData["ErrorMessage"] = "Hubo un problema al eliminar la tarea";
-                return Json(new { success = false, message = $"Error al eliminar la tarea: {ex.Message}" });
+                TempData["ErrorMessage"] = $"Error al eliminar la tarea: {ex.Message}";
+                return Json(new { success = false, message = ex.Message });
             }
         }
 
@@ -240,28 +175,19 @@ namespace GestordeTareas.UI.Controllers
         {
             try
             {
-                using (var bdContexto = new ContextoBD())
-                {
-                    var tareaBD = await bdContexto.Tarea.FirstOrDefaultAsync(t => t.Id == model.IdTarea);
-                    if (tareaBD != null)
-                    {
-                        var estadoValido = await bdContexto.EstadoTarea.FindAsync(model.IdEstadoTarea);
-                        if (estadoValido == null)
-                        {
-                            return BadRequest("Estado no válido");
-                        }
-                            
+                using var bdContexto = new ContextoBD();
+                var tareaBD = await bdContexto.Tarea.FirstOrDefaultAsync(t => t.Id == model.IdTarea);
 
-                        tareaBD.IdEstadoTarea = model.IdEstadoTarea;
-                        bdContexto.Update(tareaBD);
-                        await bdContexto.SaveChangesAsync();
-                        return Ok(new { nombreEstado = estadoValido.Nombre });
-                    }
-                    else
-                    {
-                        return NotFound("Tarea no encontrada");
-                    }
-                }
+                if (tareaBD == null) return NotFound("Tarea no encontrada");
+
+                var estadoValido = await bdContexto.EstadoTarea.FindAsync(model.IdEstadoTarea);
+                if (estadoValido == null) return BadRequest("Estado no válido");
+
+                tareaBD.IdEstadoTarea = model.IdEstadoTarea;
+                bdContexto.Update(tareaBD);
+                await bdContexto.SaveChangesAsync();
+
+                return Ok(new { nombreEstado = estadoValido.Nombre });
             }
             catch (Exception ex)
             {
@@ -275,92 +201,43 @@ namespace GestordeTareas.UI.Controllers
             public int IdEstadoTarea { get; set; }
         }
 
-        // MÉTODO PARA VERIFICAR EL ACCESO A LAS TAREAS
         private async Task<bool> VerificarAcceso(int idProyecto)
         {
-            var users = await _usuarioBL.SearchAsync(new Usuario { NombreUsuario = User.Identity.Name, Top_Aux = 1 });
-            var actualUser = users.FirstOrDefault();
+            var actualUser = (await _usuarioBL.SearchAsync(new Usuario { NombreUsuario = User.Identity.Name, Top_Aux = 1 }))
+                                .FirstOrDefault();
+            if (actualUser == null) return false;
 
-            if (actualUser == null)
-            {
-                return false; // Usuario no encontrado
-            }
+            if (User.IsInRole("Administrador")) return true;
 
-            int idUsuario = actualUser.Id;
-
-            // Verificar si el usuario es administrador
-            bool esAdmin = User.IsInRole("Administrador");
-            if (esAdmin)
-            {
-                return true; // Acceso permitido para administradores
-            }
-
-            // Verificar si el usuario está unido al proyecto
             var usuariosUnidos = await _proyectoUsuarioBL.ObtenerUsuariosUnidosAsync(idProyecto);
-            return usuariosUnidos.Any(u => u.Id == idUsuario); // Devuelve true si está unido, false si no
+            return usuariosUnidos.Any(u => u.Id == actualUser.Id);
         }
 
-        // POST: TareaController/ElegirTarea
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ElegirTarea(int idTarea)
         {
-            try
+            var actualUser = (await _usuarioBL.SearchAsync(new Usuario { NombreUsuario = User.Identity.Name, Top_Aux = 1 }))
+                                .FirstOrDefault();
+
+            if (actualUser == null) { TempData["ErrorMessage"] = "Usuario no encontrado"; return RedirectToAction("Index"); }
+
+            var tarea = await _tareaBL.GetById(new Tarea { Id = idTarea });
+            if (tarea == null) { TempData["ErrorMessage"] = "Tarea no encontrada"; return RedirectToAction("Index"); }
+
+            if (tarea.EstadoTarea.Nombre != "Pendiente")
             {
-                // Obtén el ID del usuario actual
-                var usuario = await _usuarioBL.SearchAsync(new Usuario { NombreUsuario = User.Identity.Name, Top_Aux = 1 });
-                var idUsuario = usuario.FirstOrDefault()?.Id;
-
-                // Verificar si el usuario existe
-                if (idUsuario == null)
-                {
-                    TempData["ErrorMessage"] = "Usuario no encontrado";
-                    return View("Index");
-                }
-
-                // Obtener la tarea por ID
-                Tarea tarea = await _tareaBL.GetById(new Tarea { Id = idTarea });
-
-                // Verificar si la tarea existe
-                if (tarea == null)
-                {
-                    TempData["ErrorMessage"] = "Tarea no encontrada";
-                    return View("Index");
-                }
-
-                // Verificar si la tarea está en estado "Pendiente"
-                if (tarea.EstadoTarea.Nombre != "Pendiente")
-                {
-                    TempData["ErrorMessage"] = "La tarea no está en Disponible";
-                    return View("Index");
-                }
-
-                // Asignar la tarea al usuario
-                var resultado = await _elegirTareaBL.ElegirTareaAsync(idTarea, idUsuario.Value, tarea.IdProyecto);
-
-                if (resultado)
-                {
-                    // Actualizar estado de la tarea a "En Proceso"
-                    const int ID_ESTADO_EN_PROCESO = 2;
-                    await _tareaBL.ActualizarEstadoTareaAsync(idTarea, ID_ESTADO_EN_PROCESO);
-                    TempData["SuccessMessage"] = "Tarea elegida correctamente";
-                }
-                else
-                {
-                    TempData["ErrorMessage"] = "No se pudo elegir la tarea";
-                }
-
-                var tareasDelProyecto = await _tareaBL.GetTareasByProyectoIdAsync(tarea.IdProyecto);
-
-                return View("Index", tareasDelProyecto);
-
+                TempData["ErrorMessage"] = "La tarea no está en Disponible";
+                return RedirectToAction("Index", new { proyectoId = tarea.IdProyecto });
             }
-            catch (Exception ex)
-            {
-                TempData["ErrorMessage"] = "Ocurrió un error inesperado: "+ ex.Message;
-                return RedirectToAction("Index");
-            }
+
+            bool resultado = await _elegirTareaBL.ElegirTareaAsync(idTarea, actualUser.Id, tarea.IdProyecto);
+            if (resultado) await _tareaBL.ActualizarEstadoTareaAsync(idTarea, 2); // "En Proceso"
+
+            TempData[resultado ? "SuccessMessage" : "ErrorMessage"] =
+                resultado ? "Tarea elegida correctamente" : "No se pudo elegir la tarea";
+
+            return RedirectToAction("Index", new { proyectoId = tarea.IdProyecto });
         }
-
     }
 }
