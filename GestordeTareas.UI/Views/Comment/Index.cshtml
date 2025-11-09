@@ -1,0 +1,69 @@
+﻿@model List<GestordeTaras.EN.Comment>
+
+<div id="comentariosContainer">
+    @await Html.PartialAsync("_Comentarios", Model) <!-- Inicializar con los comentarios actuales -->
+</div>
+
+@await Html.PartialAsync("_Alerts")
+
+<!-- Formulario para agregar un nuevo comentario -->
+<form asp-action="Create" method="post">
+    <input type="hidden" name="idProyecto" value="@ViewBag.IdProyecto" />
+    <textarea name="contenido" rows="4" cols="50" placeholder="Escribe tu comentario"></textarea>
+    <button type="submit">Agregar Comentario</button>
+</form>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+
+<script>
+    function confirmDelete() {
+        return confirm("¿Estás seguro de que deseas eliminar este comentario?");
+    }
+
+    $(document).on('submit', 'form', function (e) {
+        e.preventDefault();
+
+        const form = $(this);
+        const idProyecto = $('input[name="idProyecto"]', form).val();
+
+        $.ajax({
+            url: form.attr('action'),
+            method: form.attr('method'),
+            data: form.serialize(),
+            success: function () {
+                // Recargar la vista parcial con los comentarios actualizados
+                $('#comentariosContainer').load(`/Comment/ObtenerComentarios?idProyecto=${idProyecto}`);
+            },
+            error: function () {
+                alert('Ocurrió un error al intentar eliminar el comentario.');
+            }
+        });
+    });
+
+    // Función de polling para obtener comentarios actualizados
+    function obtenerComentarios() {
+        let idProyecto = @ViewBag.IdProyecto;
+
+        $.ajax({
+            url: '@Url.Action("ObtenerComentarios", "Comment")',  // Llamada al controlador
+            type: 'GET',
+            data: { idProyecto: idProyecto },
+            success: function (data) {
+                // Actualizar el contenedor de comentarios con la vista parcial obtenida
+                $('#comentariosContainer').html(data);
+            },
+            error: function () {
+                console.error('Error al obtener comentarios.');
+            }
+        });
+    }
+
+    // Ejecutar el polling cada 5 segundos
+    setInterval(obtenerComentarios, 3000);  // 5000 ms = 5 segundos
+
+    // Detener el polling cuando el usuario abandone la página
+    window.onbeforeunload = function () {
+        clearInterval(pollingInterval);
+    };
+
+</script>
