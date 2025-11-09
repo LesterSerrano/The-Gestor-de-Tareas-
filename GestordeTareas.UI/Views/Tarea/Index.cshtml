@@ -10,7 +10,7 @@
 
 @await Html.PartialAsync("_Alerts")
 
-<h1 class="text-5xl mb-8 mt-4 font-extrabold dark:text-white">Tareas</h1>
+<h1 class="text-5xl mb-8 mt-4 font-extrabold dark:text-white">Tareas del proyecto</h1>
 
 <div class="flex justify-between mb-4">
     @if (Model != null && Model.Any())
@@ -409,48 +409,48 @@ else
         }
     }
 
-        function submitcreateForm(formId) { // Definición de la función para enviar el formulario mediante AJAX
-            var formData = $('#' + formId).serialize();  // Recopila los datos del formulario con el ID proporcionado
-            $.ajax({ //Solicitud AJAX
-                url: '/Tarea/Create', // URL de la acción Create en el controlador Tarea
-                type: 'POST',  // Método de la solicitud
-                data: formData, // Datos a enviar al servidor (datos del formulario serializados)
+        function submitcreateForm(formId) { 
+            var formData = $('#' + formId).serialize();  
+            $.ajax({ 
+                url: '/Tarea/Create', 
+                type: 'POST', 
+                data: formData, 
             success: function (response) {
                 handleResponse(response);
             },
             error: function (xhr, status, error) {
                 console.error(xhr.responseText);
-                handleResponse(null, true); // Maneja el error general
+                handleResponse(null, true); 
             }
             });
         }
 
-    function submiteditForm(formId) { // Definición de la función para enviar el formulario mediante AJAX
-        var formData = $('#' + formId).serialize(); // Recopila los datos del formulario con el ID proporcionado
-        $.ajax({ //Solicitud AJAX
-            url: '/Tarea/Edit', // URL de la acción Edit en el controlador Tarea
-            type: 'POST', // Método de la solicitud
-            data: formData, // Datos a enviar al servidor (datos del formulario serializados)
+    function submiteditForm(formId) { 
+        var formData = $('#' + formId).serialize(); 
+        $.ajax({ 
+            url: '/Tarea/Edit',
+            type: 'POST', 
+            data: formData, 
             success: function (response) {
                 handleResponse(response);
             },
             error: function (xhr, status, error) {
                 console.error(xhr.responseText);
-                handleResponse(null, true); // Maneja el error general
+                handleResponse(null, true); 
             }
         });
     }
 
-    function eliminarTarea() { // Función para eliminar un Tarea mediante una solicitud AJAX
-        $.ajax({ // Enviar una solicitud AJAX para eliminar el Tarea
-            url: '/Tarea/Delete', // URL de la acción POST para eliminar la Tarea
-            type: 'POST', // Método POST para enviar la solicitud
-            data: $("#deleteForm").serialize(), // Serializar los datos del formulario (que incluye el ID de la Tarea)
-            success: function (response) { // Función a ejecutar si la solicitud AJAX es exitosa
-                window.location.reload(); // Recargar la página después de eliminar el Tarea
+    function eliminarTarea() { 
+        $.ajax({ 
+            url: '/Tarea/Delete', 
+            type: 'POST', 
+            data: $("#deleteForm").serialize(), 
+            success: function (response) { 
+                window.location.reload(); 
             },
-            error: function (xhr, status, error) { // Función a ejecutar si hay un error en la solicitud AJAX
-                alert('Error al eliminar la Tarea: ' + xhr.responseText); // Mostrar una alerta con el mensaje de error recibido del servidor
+            error: function (xhr, status, error) { 
+                alert('Error al eliminar la Tarea: ' + xhr.responseText); 
             }
         });
     }
@@ -460,7 +460,7 @@ else
         $.ajax({
             url: "/Tarea/Create/",
             type: "GET",
-            data: { idProyecto: id }, // Enviar el ID del proyecto como parte de los datos
+            data: { idProyecto: id }, 
             success: function (data) {
                 $("#createModalContent").html(data);
                 $("#createModal").modal("show");
@@ -468,38 +468,38 @@ else
         });
     }
 
-    function cargarVistaEdit(id) { // Funcion para cargar la vista en un modal
-        $.ajax({ //solicitud AJAX para obtener la vista edit
-            url: "/Tarea/Edit/" + id, // URL de la vista que se va a cargar
-            type: "GET", // Solicitud para obtener la vista
-            success: function (data) { // Función a ejecutar si la solicitud AJAX es exitosa
-                $("#editModalContent").html(data); // Inserta el contenido HTML recibido en el elemento con ID "editModalContent"
-                $("#editModal").modal("show"); // Muestra el modal con ID "editModal" después de cargar la vista
+    function cargarVistaEdit(id) { 
+        $.ajax({ 
+            url: "/Tarea/Edit/" + id, 
+            type: "GET", 
+            success: function (data) {
+                $("#editModalContent").html(data); 
+                $("#editModal").modal("show"); 
             }
         });
     }
 
-    function cargarVistaDetails(id) { // Funcion para cargar la vista en un modal
-        $.ajax({ //solicitud AJAX para obtener la vista details
-            url: "/Tarea/Details/" + id, // URL de la vista que se va a cargar
-            type: "GET", // Solicitud para obtener la vista
-            success: function (data) { // Función a ejecutar si la solicitud AJAX es exitosa
-                $("#detailsModalContent").html(data); // Inserta el contenido HTML recibido en el elemento con ID "detailsModalContent"
-                $("#detailsModal").modal("show"); // Muestra el modal con ID "detailsModal" después de cargar la vista
+    function cargarVistaDetails(id) { 
+        $.ajax({ 
+            url: "/Tarea/Details/" + id, 
+            type: "GET", 
+            success: function (data) { 
+                $("#detailsModalContent").html(data); 
+                $("#detailsModal").modal("show"); 
             }
         });
     }
 
-    function cargarVistaDelete(id) { // Funcion para cargar la vista en un modal
-        $.ajax({ //solicitud AJAX para obtener la vista delete
-            url: "/Tarea/Delete/" + id, // URL de la vista que se va a cargar
-            type: "GET", // Solicitud para obtener la vista
-            success: function (data) { // Función a ejecutar si la solicitud AJAX es exitosa
-                $("#deleteModalContent").html(data); // Inserta el contenido HTML recibido en el elemento con ID "deleteModalContent"
-                $("#deleteModal").modal("show"); // Muestra el modal con ID "deleteModal" después de cargar la vista
+    function cargarVistaDelete(id) { 
+        $.ajax({ 
+            url: "/Tarea/Delete/" + id,
+            type: "GET", 
+            success: function (data) { 
+                $("#deleteModalContent").html(data);
+                $("#deleteModal").modal("show");
             },
-            error: function () { // Función a ejecutar si la solicitud AJAX falla
-                alert("Error al cargar la vista de eliminación."); //Se muestra un mensaje de error que no se pudo mostrar el modal
+            error: function () { 
+                alert("Error al cargar la vista de eliminación."); 
             }
         });
     }
@@ -531,5 +531,15 @@ else
             }
         });
     }
+
+    // Evita submit tradicional al presionar Enter
+    $(document).on('keypress', '#createForm, #editForm', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+
+            if (this.id === 'createForm') submitcreateForm('createForm');
+            else if (this.id === 'editForm') submiteditForm('editForm');
+        }
+    });
 
 </script>

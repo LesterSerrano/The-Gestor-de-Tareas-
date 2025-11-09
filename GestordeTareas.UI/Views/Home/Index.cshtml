@@ -1,4 +1,10 @@
-﻿<div class="container mx-auto px-4 py-8">
+﻿@{
+    ViewData["Title"] = "Dashboard de Administración";
+}
+
+<div class="container mx-auto px-4 py-8">
+
+    <!-- Título -->
     <h1 class="text-4xl font-bold text-gray-800 mb-8 flex items-center">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mr-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
@@ -6,81 +12,55 @@
         Dashboard
     </h1>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+    <!-- Estadísticas generales -->
+    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6 mb-12">
         <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-600 transition-all hover:shadow-lg">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-xl font-semibold text-gray-700">Total Usuarios</h3>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
+                <i class="fas fa-users fa-2x text-blue-600"></i>
             </div>
             <p class="text-3xl font-bold text-blue-600">@ViewBag.TotalUsuarios</p>
         </div>
         <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-600 transition-all hover:shadow-lg">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-xl font-semibold text-gray-700">Total Proyectos</h3>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                </svg>
+                <i class="fas fa-folder-open fa-2x text-green-600"></i>
             </div>
             <p class="text-3xl font-bold text-green-600">@ViewBag.TotalProyectos</p>
         </div>
         <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-purple-600 transition-all hover:shadow-lg">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-xl font-semibold text-gray-700">Total Tareas</h3>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                </svg>
+                <i class="fas fa-tasks fa-2x text-purple-600"></i>
             </div>
             <p class="text-3xl font-bold text-purple-600">@ViewBag.TotalTareas</p>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <!-- Progreso por proyecto -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
         @foreach (var proyecto in ViewBag.TareasPorProyecto)
         {
             <div class="bg-white rounded-lg shadow-md p-6 transition-all hover:shadow-lg">
                 <h4 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                    </svg>
+                    <i class="fas fa-folder-open mr-2 text-indigo-600"></i>
                     @proyecto.Key
                 </h4>
                 <div class="space-y-3 mb-4">
                     <p class="flex justify-between items-center">
-                        <span class="text-gray-600 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                            </svg>
-                            Usuarios Unidos:
-                        </span>
+                        <span class="text-gray-600">Usuarios Unidos:</span>
                         <span class="font-semibold text-indigo-600">@ViewBag.UsuariosPorProyecto[proyecto.Key]</span>
                     </p>
                     <p class="flex justify-between items-center">
-                        <span class="text-gray-600 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            Tareas Pendientes:
-                        </span>
+                        <span class="text-gray-600">Tareas Pendientes:</span>
                         <span class="font-semibold text-yellow-600">@proyecto.Value.Pendientes</span>
                     </p>
                     <p class="flex justify-between items-center">
-                        <span class="text-gray-600 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-                            </svg>
-                            Tareas En Proceso:
-                        </span>
+                        <span class="text-gray-600">Tareas En Proceso:</span>
                         <span class="font-semibold text-blue-600">@proyecto.Value.EnProceso</span>
                     </p>
                     <p class="flex justify-between items-center">
-                        <span class="text-gray-600 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            Tareas Finalizadas:
-                        </span>
+                        <span class="text-gray-600">Tareas Finalizadas:</span>
                         <span class="font-semibold text-green-600">@proyecto.Value.Finalizadas</span>
                     </p>
                 </div>
@@ -105,4 +85,34 @@
             </div>
         }
     </div>
+    @if (User.Identity.IsAuthenticated && User.IsInRole("Administrador"))
+    { 
+    <!-- Módulos de administración -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+        <div class="bg-white rounded-lg shadow-md p-6 text-center transition-all hover:shadow-lg hover:scale-105">
+            <i class="fas fa-tags fa-3x mb-3 text-purple-600"></i>
+            <h5 class="text-lg font-semibold mb-2">Categorías</h5>
+            <p class="text-gray-600 mb-4">Gestiona las categorías de tareas.</p>
+            <a href="@Url.Action("Index", "Categoria")" class="btn btn-primary w-full">Ir a Categorías</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 text-center transition-all hover:shadow-lg hover:scale-105">
+            <i class="fas fa-user-tag fa-3x mb-3 text-blue-600"></i>
+            <h5 class="text-lg font-semibold mb-2">Cargos</h5>
+            <p class="text-gray-600 mb-4">Gestiona los cargos de usuarios.</p>
+            <a href="@Url.Action("Index", "Cargo")" class="btn btn-primary w-full">Ir a Cargos</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 text-center transition-all hover:shadow-lg hover:scale-105">
+            <i class="fas fa-exclamation-circle fa-3x mb-3 text-red-600"></i>
+            <h5 class="text-lg font-semibold mb-2">Prioridades</h5>
+            <p class="text-gray-600 mb-4">Gestiona los niveles de prioridad de tareas.</p>
+            <a href="@Url.Action("Index", "Prioridad")" class="btn btn-primary w-full">Ir a Prioridades</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 text-center transition-all hover:shadow-lg hover:scale-105">
+            <i class="fas fa-tasks fa-3x mb-3 text-green-600"></i>
+            <h5 class="text-lg font-semibold mb-2">Estado de Tareas</h5>
+            <p class="text-gray-600 mb-4">Gestiona los estados de las tareas.</p>
+            <a href="@Url.Action("Index", "Estado")" class="btn btn-primary w-full">Ir a Estados</a>
+        </div>
+    </div>
+    }
 </div>

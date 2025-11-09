@@ -1,4 +1,4 @@
-﻿@model IEnumerable<GestordeTaras.EN.EstadoTarea>
+﻿@model IEnumerable<GestordeTaras.EN.Cargo>
 
 @{
     ViewData["Title"] = "Index";
@@ -9,7 +9,7 @@
 
 @await Html.PartialAsync("_AlertMessages")
 
-<h1 class="text-5xl mb-8 mt-4 font-extrabold dark:text-white">Estados de las Tareas</h1>
+<h1 class="text-5xl mb-8 mt-4 font-extrabold dark:text-white">Tipos de cargos</h1>
 <p>
     <a href="#" class="no-underline hover:no-underline text-white bg-purple-700 hover:bg-purple-800 focus:outline-none focus:ring-4 focus:ring-purple-300 font-medium rounded-full text-lg px-5 py-2.5 text-center mb-2 dark:bg-purple-600 dark:hover:bg-purple-700 dark:focus:ring-purple-900 inline-flex items-center"  onclick="cargarVistaCreate()">
         <i class="fas fa-plus text-lg mr-2"></i> Agregar
@@ -89,7 +89,7 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header bg-purple-700 text-white">
-                <h5 class="modal-title" id="editModalLabel">Editar Estado</h5>
+                <h5 class="modal-title" id="editModalLabel">Editar Cargo</h5>
                 <button type="button" class="btn-close bg-white text-white" data-bs-dismiss="modal" aria-label="Close">
                 </button>
             </div>
@@ -115,7 +115,7 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header bg-purple-700 text-white">
-                <h5 class="modal-title" id="detailsModalLabel">Detalles del Estado</h5>
+                <h5 class="modal-title" id="detailsModalLabel">Detalles del Cargo</h5>
                 <button type="button" class="btn-close bg-white text-white" data-bs-dismiss="modal" aria-label="Close">
                 </button>
             </div>
@@ -139,7 +139,7 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header bg-red-600 text-white">
-                <h5 class="modal-title" id="deleteModalLabel">Eliminar Estado</h5>
+                <h5 class="modal-title" id="deleteModalLabel">Eliminar Cargo</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
                 </button>
             </div>
@@ -147,7 +147,7 @@
                 <!-- Contenido de la vista de eliminación se cargará aquí -->
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-danger" onclick="eliminarEstadoTarea()">Eliminar</button>
+                <button type="button" class="btn btn-danger" onclick="eliminarCargo()">Eliminar</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
             </div>
         </div>
@@ -192,9 +192,9 @@
     }
 
     function submitcreateForm(formId) { 
-        var formData = $('#' + formId).serialize();  
+        var formData = $('#' + formId).serialize(); 
         $.ajax({ 
-            url: '/EstadoTarea/Create',
+            url: '/Cargo/Create', 
             type: 'POST',  
             data: formData, 
             success: function (response) {
@@ -208,10 +208,10 @@
     }
 
     function submiteditForm(formId) { 
-        var formData = $('#' + formId).serialize();
+        var formData = $('#' + formId).serialize(); 
         $.ajax({ 
-            url: '/EstadoTarea/Edit', 
-            type: 'POST',
+            url: '/Cargo/Edit',
+            type: 'POST', 
             data: formData, 
             success: function (response) {
                 handleResponse(response);
@@ -223,9 +223,9 @@
         });
     }
 
-    function eliminarEstadoTarea() { 
+    function eliminarCargo() { 
         $.ajax({ 
-            url: '/EstadoTarea/Delete', 
+            url: '/Cargo/Delete', 
             type: 'POST', 
             data: $("#deleteForm").serialize(), 
             success: function (response) {
@@ -233,15 +233,15 @@
             },
             error: function (xhr, status, error) {
                 console.error(xhr.responseText);
-                handleResponse(null, true);
+                handleResponse(null, true); 
             }
         });
     }
    
 
     function cargarVistaCreate() { 
-        $.ajax({
-            url: "/EstadoTarea/Create", 
+        $.ajax({ 
+            url: "/Cargo/Create",
             type: "GET", 
             success: function (data) { 
                 $("#createModalContent").html(data); 
@@ -252,10 +252,10 @@
 
     function cargarVistaEdit(id) { 
         $.ajax({ 
-            url: "/EstadoTarea/Edit/" + id, 
+            url: "/Cargo/Edit/" + id, 
             type: "GET", 
             success: function (data) { 
-                $("#editModalContent").html(data);
+                $("#editModalContent").html(data); 
                 $("#editModal").modal("show"); 
             }
         });
@@ -263,10 +263,10 @@
 
     function cargarVistaDetails(id) { 
         $.ajax({ 
-            url: "/EstadoTarea/Details/" + id,
+            url: "/Cargo/Details/" + id, 
             type: "GET", 
             success: function (data) { 
-                $("#detailsModalContent").html(data); 
+                $("#detailsModalContent").html(data);  
                 $("#detailsModal").modal("show"); 
             }
         });
@@ -274,14 +274,14 @@
 
     function cargarVistaDelete(id) { 
         $.ajax({ 
-            url: "/EstadoTarea/Delete/" + id, 
+            url: "/Cargo/Delete/" + id,
             type: "GET", 
             success: function (data) { 
                 $("#deleteModalContent").html(data); 
                 $("#deleteModal").modal("show"); 
             },
             error: function () { 
-                alert("Error al cargar la vista de eliminación."); 
+                alert("Error al cargar la vista de eliminación.");
             }
         });
     }
