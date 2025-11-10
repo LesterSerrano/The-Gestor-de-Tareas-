@@ -7,9 +7,9 @@
 <div class="flex justify-center items-center">
     <div class="p-3 text-center">
         <!-- Mensaje de Confirmación -->
-        <h3 class="mb-3 text-lg font-semibold text-gray-900 dark:text-gray-100">
-            ¿Estás seguro de eliminar al usuario?
-            <p class="text-gray-500 text-sm font-semibold">Esta acción no se puede deshacer</p>
+        <h3 class="mb-3 text-xl font-semibold text-gray-900 dark:text-gray-100">
+            ¿Estás seguro de eliminar a este usuario?
+            
         </h3>
 
         <!-- Información del Usuario -->
@@ -19,16 +19,17 @@
 
             <!-- Nombre y apellido del usuario -->
             <div class="ml-3 text-left">
-                <h4 class="text-xl font-semibold text-gray-700 dark:text-gray-300">@Model.Nombre @Model.Apellido</h4>
+                <h4 class="text-lg font-semibold text-gray-700 dark:text-gray-300">@Model.Nombre @Model.Apellido</h4>
                 <!-- Nombre de usuario -->
-                <p class="text-sm text-gray-500 text-red-600 font-semibold">@Model.NombreUsuario</p>
+                <p class="text-sm text-gray-500 text-center text-red-600 font-semibold">@Model.NombreUsuario</p>
             </div>
         </div>
 
-        <!-- Formulario de eliminación -->
-        <form asp-action="Delete" id="deleteForm" method="post">
-            <!-- Input oculto para pasar el ID -->
-            <input type="hidden" id="deleteUserId" name="id" />
+        @* <p class="text-gray-500 text-center text-sm font-semibold">Esta acción no se puede deshacer</p> *@
+
+        <form asp-action="Delete" id="deleteForm">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
         </form>
     </div>
 </div>

@@ -1,5 +1,11 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+    content: [
+        "./Views/**/*.cshtml",
+        "./Pages/**/*.cshtml",
+        "./wwwroot/**/*.js",
+        "./wwwroot/css/input.css"
+    ],
     darkMode: 'class',
     theme: {
         extend: {

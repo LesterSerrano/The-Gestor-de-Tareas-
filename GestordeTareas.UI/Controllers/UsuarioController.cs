@@ -83,7 +83,7 @@ namespace GestordeTareas.UI.Controllers
             ViewBag.Top = top;
             ViewBag.Roles = await _cargoBL.GetAllAsync();
 
-            return View(lista);
+            return View("Index", lista);
         }
 
         [Authorize]
@@ -228,6 +228,16 @@ namespace GestordeTareas.UI.Controllers
             }
         }
 
+        [Authorize]
+        public async Task<ActionResult> Details(int id)
+        {
+            var usuario = await _usuarioBL.GetByIdAsync(new Usuario { Id = id });
+            if (usuario == null) return NotFound();
+
+            // Nota: La vista a devolver debe ser una 'Details.cshtml'
+            return PartialView("Details", usuario);
+        }
+
         public async Task<ActionResult> Edit(int id)
         {
             var usuario = await _usuarioBL.GetByIdAsync(new Usuario { Id = id });
@@ -307,6 +317,19 @@ namespace GestordeTareas.UI.Controllers
                 TempData["ErrorMessage"] = ex.Message;
                 return RedirectToAction("Perfil");
             }
+        }
+
+        [Authorize(Roles = "Administrador")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var usuario = await _usuarioBL.GetByIdAsync(new Usuario { Id = id });
+
+            if (usuario == null)
+            {
+                return NotFound();
+            }
+
+            return PartialView("Delete", usuario);
         }
 
         [Authorize(Roles = "Administrador")]

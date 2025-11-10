@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -27,4 +27,9 @@
     <ProjectReference Include="..\GestordeTareas.BL\GestordeTareas.BL.csproj" />
   </ItemGroup>
 
+  <Target Name="BuildTailwindCSS" BeforeTargets="Build">
+    <Exec Command="tailwindcss.exe -i ./wwwroot/css/input.css -o ./wwwroot/css/site.css --minify"
+          WorkingDirectory="$(ProjectDir)"
+          ContinueOnError="false" />
+  </Target>
 </Project>
