@@ -71,12 +71,10 @@ namespace GestordeTareas.UI.Controllers
                 proyecto.CodigoAcceso = codigoAcceso;
 
                 await _proyectoBL.CreateAsync(proyecto);
-                TempData["SuccessMessage"] = "Proyecto creado correctamente";
                 return Json(new { success = true, message = "Proyecto creado correctamente" });
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = "Hubo un problema al crear el proyecto: " + ex.Message;
                 return Json(new { success = false, message = "Hubo un problema al crear el proyecto: " + ex.Message });
             }
         }
@@ -95,12 +93,10 @@ namespace GestordeTareas.UI.Controllers
             try
             {
                 await _proyectoBL.UpdateAsync(proyecto);
-                TempData["SuccessMessage"] = "Proyecto actualizado correctamente";
                 return Json(new { success = true, message = "Proyecto actualizado correctamente" });
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = "Hubo un problema al actualizar el proyecto: " + ex.Message;
                 return Json(new { success = false, message = "Hubo un problema al actualizar el proyecto: " + ex.Message });
             }
         }
@@ -119,12 +115,10 @@ namespace GestordeTareas.UI.Controllers
             try
             {
                 await _proyectoBL.DeleteAsync(proyecto);
-                TempData["SuccessMessage"] = "Proyecto eliminado correctamente";
                 return Json(new { success = true, message = "Proyecto eliminado correctamente" });
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = "Hubo un problema al eliminar el proyecto: " + ex.Message;
                 return Json(new { success = false, message = "Hubo un problema al eliminar el proyecto: " + ex.Message });
             }
         }

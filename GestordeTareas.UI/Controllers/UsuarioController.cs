@@ -260,7 +260,6 @@ namespace GestordeTareas.UI.Controllers
                 usuario.Pass = existingUser.Pass;
                 await _usuarioBL.Update(usuario);
 
-                TempData["SuccessMessage"] = "Usuario actualizado correctamente";
                 return Json(new { success = true, message = "Usuario actualizado correctamente" });
             }
             catch (Exception ex)

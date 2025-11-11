@@ -27,35 +27,22 @@ window.addEventListener('click', function (e) {
 function handleResponse(response, isError = false) {
 
     hideAllModals();
-    // Cerrar el modal y luego mostrar el mensaje
-    setTimeout(() => {
-        if (isError) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Hubo un problema al procesar la solicitud.',
-                confirmButtonText: 'OK',
-                showConfirmButton: true,
-                timer: null
-            });
-        } else {
-            Swal.fire({
-                icon: response.success ? 'success' : 'error',
-                title: response.success ? 'Éxito' : 'Error',
-                text: response.message,
-                timer: response.success ? 2000 : null,
-                showConfirmButton: false
-            }).then(() => {
-                if (response.success) {
-                    $.get("/Proyecto/Index", function (html) {
-                        let nuevoContenido = $(html).find("#tablaActualizablePosi").html();
-                        $("#tablaActualizablePosi").html(nuevoContenido);
-                    });
-                }
 
-            });
-        }
-    }, 300);
+    if (isError || (response && response.success === false)) {
+        let errorMessage = isError ? 'Error al procesar la solicitud.' : (response.message || 'Error desconocido.');
+
+        showCustomAlert(errorMessage, 'error');
+
+    }
+    else if (response && response.success) {
+
+        $.get("/Proyecto/Index", function (html) {
+            let nuevoContenido = $(html).find("#tablaActualizablePosi").html();
+            $("#tablaActualizablePosi").html(nuevoContenido);
+
+            showCustomAlert(response.message, 'success');
+        });
+    }
 }
 
 function openModal(id) {
@@ -163,17 +150,6 @@ function cargarVistaDelete(id) {
         }
     });
 }
-
-document.addEventListener("DOMContentLoaded", function () {
-    const alertContainer = document.getElementById('alertContainer');
-    if (alertContainer) {
-        setTimeout(() => {
-            alertContainer.style.transition = 'opacity 0.5s ease';
-            alertContainer.style.opacity = '0';          
-            setTimeout(() => alertContainer.remove(), 500);
-        }, 4000); 
-    }
-});
 
 // Evita submit tradicional al presionar Enter
 $(document).on('keypress', '#createForm, #editForm', function (e) {

@@ -20,7 +20,11 @@
 
     <div class="mb-4">
         <label asp-for="FechaFinalizacion" class="block text-gray-700 text-sm font-bold mb-2">Fecha de Finalización</label>
-        <input asp-for="FechaFinalizacion" class="border-b-2 border-purple-700 w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-purple-500" placeholder="Fecha de Finalización" type="date" />
+        <input asp-for="FechaFinalizacion"
+               class="border-b-2 border-purple-700 w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-purple-500"
+               placeholder="Fecha de Finalización"
+               type="datetime-local"
+               value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" />
         <span asp-validation-for="FechaFinalizacion" class="text-purple-700 text-xs italic"></span>
     </div>
 

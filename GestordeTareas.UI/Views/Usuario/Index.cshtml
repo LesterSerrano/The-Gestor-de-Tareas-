@@ -1,12 +1,9 @@
 ﻿@model IEnumerable<GestordeTaras.EN.Usuario>
 @{
     ViewData["Title"] = "Index";
-
 }
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-
-@await Html.PartialAsync("_Alerts")
 
 <h1 class="text-5xl mb-8 mt-4 font-extrabold dark:text-white">Usuarios</h1>
 
@@ -92,25 +89,24 @@
                         }
                         @statusName
                     </td>
-                    <td class="px-6 py-4 flex justify-center items-center space-x-2">
-                        <button type="button"
-                                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded"
-                                onclick="cargarVistaEdit(@item.Id)">
-                            <i class="fas fa-edit text-lg"></i>
-                        </button>
-
-                        <button type="button"
-                                class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-3 rounded"
-                                onclick="cargarVistaDetails(@item.Id)">
-                            <i class="fas fa-eye text-lg"></i>
-                        </button>
-
-                        <button type="button"
-                                class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-3 rounded"
-                                onclick="cargarVistaDelete(@item.Id)">
-                            <i class="fas fa-trash-alt text-lg"></i>
-                        </button>
-
+                    <td class="px-6 py-4">
+                        <div class="flex justify-center items-center space-x-2 h-full">
+                            <button type="button"
+                                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded"
+                                    onclick="cargarVistaEdit(@item.Id)">
+                                <i class="fas fa-edit text-lg"></i>
+                            </button>
+                            <button type="button"
+                                    class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-3 rounded"
+                                    onclick="cargarVistaDetails(@item.Id)">
+                                <i class="fas fa-eye text-lg"></i>
+                            </button>
+                            <button type="button"
+                                    class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-3 rounded"
+                                    onclick="cargarVistaDelete(@item.Id)">
+                                <i class="fas fa-trash-alt text-lg"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             }
@@ -190,147 +186,4 @@
 
 <!-- Bootstrap JavaScript -->
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-
-<script>
-
-    //Función par cerrar modales
-    function hideAllModals() {
-        closeModal("createModal");
-        closeModal("editModal");
-        closeModal("detailsModal");
-        closeModal("deleteModal");
-    }
-
-    function handleResponse(response, isError = false) {
-
-        hideAllModals();
-        // Cerrar el modal y luego mostrar el mensaje
-        setTimeout(() => {
-            if (isError) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Hubo un problema al procesar la solicitud.',
-                    confirmButtonText: 'OK',
-                    showConfirmButton: true,
-                    timer: null
-                });
-            } else {
-                Swal.fire({
-                    icon: response.success ? 'success' : 'error',
-                    title: response.success ? 'Éxito' : 'Error',
-                    text: response.message,
-                    timer: response.success ? 2000 : null,
-                    showConfirmButton: false
-                }).then(() => {
-                    if (response.success) {
-                        $.get("/Usuario/Index", function (html) {
-                            let nuevoContenido = $(html).find("#tablaActualizablePosi").html();
-                            $("#tablaActualizablePosi").html(nuevoContenido);
-                        });
-                    }
-                });
-            }
-        }, 300);
-    }
-
-    function openModal(id) {
-        const modal = document.getElementById(id);
-        if (!modal) return;
-
-        modal.classList.remove("hidden");
-        modal.classList.add("flex");
-
-        // Bloquear scroll del body
-        document.body.classList.add("overflow-hidden");
-    }
-
-    function closeModal(id) {
-        const modal = document.getElementById(id);
-        if (!modal) return;
-
-        modal.classList.add("hidden");
-        modal.classList.remove("flex");
-
-        // Rehabilitar scroll del body
-        document.body.classList.remove("overflow-hidden");
-    }
-
-    function submiteditForm(formId) { 
-        var formData = $('#' + formId).serialize(); 
-        $.ajax({ 
-            url: '/Usuario/Edit',
-            type: 'POST', 
-            data: formData,
-            success: function (response) {
-                handleResponse(response);
-            },
-            error: function (xhr, status, error) {
-                console.error(xhr.responseText);
-                handleResponse(null, true); 
-            }
-        });
-    }
-
-    function eliminarUsuario() {
-        $.ajax({
-            url: '/Usuario/Delete',
-            type: 'POST',
-            data: $("#deleteForm").serialize(),
-            success: function (response) {
-                handleResponse(response);
-            },
-            error: function (xhr, status, error) {
-                console.error(xhr.responseText);
-                handleResponse(null, true);
-            }
-        });
-    }
-
-    function cargarVistaEdit(id) { 
-        $.ajax({ 
-            url: "/Usuario/Edit/" + id, 
-            type: "GET", 
-            success: function (data) { 
-                document.getElementById("editModalContent").innerHTML = data;
-                openModal("editModal");
-            }
-        });
-    }
-
-    function cargarVistaDetails(id) { 
-        $.ajax({ 
-            url: "/Usuario/Details/" + id, 
-            type: "GET", // Solicitud para obtener la vista
-            success: function (data) { 
-                document.getElementById("detailsModalContent").innerHTML = data;
-                openModal("detailsModal");
-            }
-        });
-    }
-
-    function cargarVistaDelete(id) {
-        $.ajax({
-            url: "/Usuario/Delete/" + id,
-            type: "GET",
-            success: function (data) {
-                document.getElementById("deleteModalContent").innerHTML = data;
-                openModal("deleteModal");
-            },
-            error: function () {
-                alert("Error al cargar la vista de eliminación.");
-            }
-        });
-    }
-
-    // Evita submit tradicional al presionar Enter
-    $(document).on('keypress', '#createForm, #editForm', function (e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-
-            if (this.id === 'createForm') submitcreateForm('createForm');
-            else if (this.id === 'editForm') submiteditForm('editForm');
-        }
-    });
-
-</script>
+<script src="~/js/Usuario.js"></script>

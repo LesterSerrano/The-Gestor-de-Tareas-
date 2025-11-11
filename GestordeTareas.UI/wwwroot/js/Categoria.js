@@ -9,35 +9,22 @@ function hideAllModals() {
 function handleResponse(response, isError = false) {
 
     hideAllModals();
-    // Cerrar el modal y luego mostrar el mensaje
-    setTimeout(() => {
-        if (isError) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Hubo un problema al procesar la solicitud.',
-                confirmButtonText: 'OK',
-                showConfirmButton: true,
-                timer: null
-            });
-        } else {
-            Swal.fire({
-                icon: response.success ? 'success' : 'error',
-                title: response.success ? 'Éxito' : 'Error',
-                text: response.message,
-                timer: response.success ? 2000 : null,
-                showConfirmButton: false
-            }).then(() => {
-                if (response.success) {
-                    $.get("/Categoria/Index", function (html) {
-                        let nuevoContenido = $(html).find("#tablaActualizablePosi").html();
-                        $("#tablaActualizablePosi").html(nuevoContenido);
-                    });
-                }
 
-            });
-        }
-    }, 300);
+    if (isError || (response && response.success === false)) {
+        let errorMessage = isError ? 'Error al procesar la solicitud.' : (response.message || 'Error desconocido.');
+
+        showCustomAlert(errorMessage, 'error');
+
+    }
+    else if (response && response.success) {
+
+        $.get("/Categoria/Index", function (html) {
+            let nuevoContenido = $(html).find("#tablaActualizablePosi").html();
+            $("#tablaActualizablePosi").html(nuevoContenido);
+
+            showCustomAlert(response.message, 'success');
+        });
+    }
 }
 
 function openModal(id) {

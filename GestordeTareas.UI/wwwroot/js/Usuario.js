@@ -18,7 +18,7 @@ function handleResponse(response, isError = false) {
     }
     else if (response && response.success) {
 
-        $.get("/Cargo/Index", function (html) {
+        $.get("/Usuario/Index", function (html) {
             let nuevoContenido = $(html).find("#tablaActualizablePosi").html();
             $("#tablaActualizablePosi").html(nuevoContenido);
 
@@ -49,26 +49,10 @@ function closeModal(id) {
     document.body.classList.remove("overflow-hidden");
 }
 
-function submitcreateForm(formId) {
-    var formData = $('#' + formId).serialize();
-    $.ajax({
-        url: '/Cargo/Create',
-        type: 'POST',
-        data: formData,
-        success: function (response) {
-            handleResponse(response);
-        },
-        error: function (xhr, status, error) {
-            console.error(xhr.responseText);
-            handleResponse(null, true);
-        }
-    });
-}
-
 function submiteditForm(formId) {
     var formData = $('#' + formId).serialize();
     $.ajax({
-        url: '/Cargo/Edit',
+        url: '/Usuario/Edit',
         type: 'POST',
         data: formData,
         success: function (response) {
@@ -81,9 +65,9 @@ function submiteditForm(formId) {
     });
 }
 
-function eliminarCargo() {
+function eliminarUsuario() {
     $.ajax({
-        url: '/Cargo/Delete',
+        url: '/Usuario/Delete',
         type: 'POST',
         data: $("#deleteForm").serialize(),
         success: function (response) {
@@ -96,35 +80,21 @@ function eliminarCargo() {
     });
 }
 
-
-function cargarVistaCreate() {
-    $.ajax({
-        url: "/Cargo/Create",
-        type: "GET",
-        success: function (data) {
-            document.getElementById("createModalContent").innerHTML = data;
-            openModal("createModal");
-
-        }
-    });
-}
-
 function cargarVistaEdit(id) {
     $.ajax({
-        url: "/Cargo/Edit/" + id,
+        url: "/Usuario/Edit/" + id,
         type: "GET",
         success: function (data) {
             document.getElementById("editModalContent").innerHTML = data;
             openModal("editModal");
-
         }
     });
 }
 
 function cargarVistaDetails(id) {
     $.ajax({
-        url: "/Cargo/Details/" + id,
-        type: "GET",
+        url: "/Usuario/Details/" + id,
+        type: "GET", // Solicitud para obtener la vista
         success: function (data) {
             document.getElementById("detailsModalContent").innerHTML = data;
             openModal("detailsModal");
@@ -134,7 +104,7 @@ function cargarVistaDetails(id) {
 
 function cargarVistaDelete(id) {
     $.ajax({
-        url: "/Cargo/Delete/" + id,
+        url: "/Usuario/Delete/" + id,
         type: "GET",
         success: function (data) {
             document.getElementById("deleteModalContent").innerHTML = data;

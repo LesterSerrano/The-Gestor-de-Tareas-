@@ -8,8 +8,6 @@
     <link rel="icon" type="image/png" href="~/img/Icono.png" />
     <link rel="stylesheet" href="~/css/site.css">
     <link rel="stylesheet" href="~/css/custom.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
           integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ=="
@@ -18,6 +16,9 @@
 </head>
 
 <body class="dark:bg-darkPurple dark:text-darkText light:bg-lightPurple light:text-lightText font-sans text-base">
+
+    <div id="alertContainer" class="fixed bottom-4 right-4 z-50">
+    </div>
 
     <script>
 
@@ -410,6 +411,7 @@
 
     </script>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/js/alerts.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 
 </body>

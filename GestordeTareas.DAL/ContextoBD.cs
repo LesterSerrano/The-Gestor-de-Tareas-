@@ -28,7 +28,7 @@ namespace GestordeTareas.DAL
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsbuilder)
         {
-            optionsbuilder.UseSqlServer(@"data source = DESKTOP-UMST7PO; initial catalog = GestordeTareasBD; integrated security = true; encrypt = false; trustservercertificate =true");
+            optionsbuilder.UseSqlServer(@"data source = desktop-l1nkjnu\sqlexpress; initial catalog = GestordeTareasBD; integrated security = true; encrypt = false; trustservercertificate =true");
 
         }
 
@@ -39,7 +39,7 @@ namespace GestordeTareas.DAL
         //                          Password=gestor123456;
         //                          Encrypt=True; 
         //                          TrustServerCertificate=True;");
-        //}  desktop-l1nkjnu\sqlexpress
+        //}  DESKTOP-UMST7PO
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
