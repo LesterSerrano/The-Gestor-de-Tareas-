@@ -25,6 +25,7 @@ namespace GestordeTaras.EN
 
         [Required(ErrorMessage = "Campo obligatorio")]
         [Display(Name = "Fecha de finalizacion")]
+        [DataType(DataType.DateTime)]
         public DateTime FechaFinalizacion { get; set; } = DateTime.Now;
 
         [Required(ErrorMessage = "Campo obligatorio")]
