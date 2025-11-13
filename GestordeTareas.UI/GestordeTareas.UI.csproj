@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="15.1.0" />
     <PackageReference Include="FirebaseAuthentication.net" Version="3.7.2" />
     <PackageReference Include="FirebaseStorage.net" Version="1.0.3" />
     <PackageReference Include="MailKit" Version="4.8.0" />
@@ -28,8 +29,6 @@
   </ItemGroup>
 
   <Target Name="BuildTailwindCSS" BeforeTargets="Build">
-    <Exec Command="npx tailwindcss -i ./wwwroot/css/input.css -o ./wwwroot/css/site.css --minify"
-          WorkingDirectory="$(ProjectDir)"
-          ContinueOnError="false" />
+    <Exec Command="npx tailwindcss -i ./wwwroot/css/input.css -o ./wwwroot/css/site.css --minify" WorkingDirectory="$(ProjectDir)" ContinueOnError="false" />
   </Target>
 </Project>

@@ -9,6 +9,8 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using GestordeTareas.UI.Helpers;
 using GestordeTareas.DAL;
+using AutoMapper;
+
 
 namespace GestordeTareas.UI.Controllers
 {
@@ -18,12 +20,14 @@ namespace GestordeTareas.UI.Controllers
         private readonly UsuarioBL _usuarioBL;
         private readonly CargoBL _cargoBL;
         private readonly IEmailService _emailService;
+        private readonly IMapper _mapper;
 
-        public UsuarioController(UsuarioBL usuarioBL, CargoBL cargoBL, IEmailService emailService)
+        public UsuarioController(UsuarioBL usuarioBL, CargoBL cargoBL, IEmailService emailService, Imapper mapper)
         {
             _usuarioBL = usuarioBL;
             _cargoBL = cargoBL;
             _emailService = emailService;
+            _mapper = mapper;
         }
 
         #region Helpers

@@ -4,15 +4,25 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using GestordeTareas.BL;
+using GestordeTareas.DAL;
+using GestordeTareas.DAL.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
+using AutoMapper;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("GestordeTareasUIContextConnection") ?? throw new InvalidOperationException("Connection string 'GestordeTareasUIContextConnection' not found.");
 
+builder.Services.AddDbContext<ContextoBD>(options => options.UseSqlServer(connectionString));
 builder.Services.AddDbContext<GestordeTareasUIContext>(options => options.UseSqlServer(connectionString));
-
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true).AddEntityFrameworkStores<GestordeTareasUIContext>();
+builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 var configuration = builder.Configuration;
-// Add services to the container.
+
+//REGISTRO DE INTERFACES
+builder.Services.AddScoped<IUsuarioDAL, UsuarioDAL>();
+
+// REGISTRO DE BL
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<UsuarioBL>();
 builder.Services.AddScoped<ProyectoBL>();

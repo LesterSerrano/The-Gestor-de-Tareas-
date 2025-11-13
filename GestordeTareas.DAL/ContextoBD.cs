@@ -11,6 +11,9 @@ namespace GestordeTareas.DAL
 {
     public class ContextoBD : DbContext
     {
+        public ContextoBD(DbContextOptions<ContextoBD> options) : base(options)
+        {
+        }
         public DbSet<Categoria> Categoria { get; set; }
         public DbSet<Cargo> Cargo { get; set; }
         public DbSet<Prioridad> Prioridad { get; set; }
@@ -25,22 +28,6 @@ namespace GestordeTareas.DAL
         public DbSet<InvitacionProyecto> InvitacionProyecto { get; set; }
         public DbSet<PasswordResetCode> PasswordResetCode { get; set; }
         public DbSet<Comment> Comment { get; set; }
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsbuilder)
-        {
-            optionsbuilder.UseSqlServer(@"Server=DESKTOP-J3V7N3S;Database=GestordeTareasBD ;Trusted_Connection=True;TrustServerCertificate=True");
-
-        }
-// ConnectionStrings:DefaultConnection = Server=DESKTOP-J3V7N3S;Database=AuthServiceDB;Trusted_Connection=True;TrustServerCertificate=True;
-
-
-        //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        //{
-        //    optionsBuilder.UseSqlServer(@"Data Source=SQL1003.site4now.net;Initial Catalog=db_ab72aa_gestordetareas;User Id=db_ab72aa_gestordetareas_admin; 
-        //                          Password=gestor123456;
-        //                          Encrypt=True; 
-        //                          TrustServerCertificate=True;");
-        //}  DESKTOP-UMST7PO
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
