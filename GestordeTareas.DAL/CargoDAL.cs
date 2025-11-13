@@ -1,4 +1,5 @@
 ﻿using GestordeTaras.EN;
+using GestordeTareas.DAL.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace GestordeTareas.DAL
 {
-    public class CargoDAL
+    public class CargoDAL: ICargoDAL
     {
         private readonly ContextoBD _dbContext;
 
@@ -51,7 +52,7 @@ namespace GestordeTareas.DAL
         }
 
         // Obtener un Cargo por ID
-        public  async Task<Cargo> GetByIdAsync(Cargo cargo)
+        public async Task<Cargo> GetByIdAsync(Cargo cargo)
         {
             return await _dbContext.Cargo.FirstOrDefaultAsync(c => c.Id == cargo.Id);
         }

@@ -13,9 +13,8 @@ namespace GestordeTareas.DAL.Interfaces
         Task<int> UpdateAsync(Cargo cargo);
         Task<int> DeleteAsync(Cargo cargo);
         Task<Cargo> GetByIdAsync(Cargo cargo);
-        Task<Cargo> GetByNombreCargoAsync(Cargo cargo);
         Task<List<Cargo>> GetAllAsync();
-        Task<List<Cargo>> SearchAsync(Cargo cargo);
+        Task<int> GetCargoColaboradorIdAsync();
 
     }
 }
