@@ -1,39 +1,42 @@
 ﻿using GestordeTaras.EN;
-using GestordeTareas.DAL;
-using System;
+using GestordeTareas.DAL.Interfaces;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace GestordeTareas.BL
 {
     public class CategoriaBL
     {
-        public async Task<int> CreateAsync(Categoria categoria)
+        private readonly ICategoria _categoriaDAL;
+
+        public CategoriaBL(ICategoria categoriaDAL)
         {
-            return await CategoriaDAL.CreateAsync(categoria);
-        }
-        public async Task<int> UpdateAsync(Categoria categoria)
-        {
-            return await CategoriaDAL.UpdateAsync(categoria);
-        }
-        public async Task<int> DeleteAsync(Categoria categoria)
-        {
-            return await CategoriaDAL.DeleteAsync(categoria);
+            _categoriaDAL = categoriaDAL;
         }
 
-        public async Task<Categoria> GetById(Categoria categoria)
+        public async Task<Categoria> CreateAsync(Categoria categoria)
         {
-            return await CategoriaDAL.GetByIdAsync(categoria);
+            return await _categoriaDAL.CreateCategoriaAsync(categoria);
         }
-        public async Task<List<Categoria>> GetAllAsync()
+
+        public async Task<Categoria> UpdateAsync(Categoria categoria)
         {
-            return await CategoriaDAL.GetAllAsync();
+            return await _categoriaDAL.UpdateCategoriaAsync(categoria);
         }
-        public async Task<List<Categoria>> SearchAsync(Categoria category)
+
+        public async Task<bool> DeleteAsync(int id)
         {
-            return await CategoriaDAL.SearchAsync(category);
+            return await _categoriaDAL.DeleteCategoriaAsync(id);
+        }
+
+        public async Task<Categoria> GetByIdAsync(int id)
+        {
+            return await _categoriaDAL.GetCategoriaByIdAsync(id);
+        }
+
+        public async Task<IEnumerable<Categoria>> GetAllAsync()
+        {
+            return await _categoriaDAL.GetAllCategoriasAsync();
         }
     }
 }

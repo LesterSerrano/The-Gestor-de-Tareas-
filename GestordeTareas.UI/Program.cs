@@ -9,6 +9,7 @@ using GestordeTareas.DAL.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using AutoMapper;
 using System.Reflection;
+using GestordeTareas.UI.profiles;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("GestordeTareasUIContextConnection") ?? throw new InvalidOperationException("Connection string 'GestordeTareasUIContextConnection' not found.");
@@ -17,6 +18,8 @@ builder.Services.AddDbContext<ContextoBD>(options => options.UseSqlServer(connec
 builder.Services.AddDbContext<GestordeTareasUIContext>(options => options.UseSqlServer(connectionString));
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true).AddEntityFrameworkStores<GestordeTareasUIContext>();
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
+builder.Services.AddAutoMapper(AutoMapperRegistry.GetProfiles());
+ //para los perfiles en otros proyectos
 var configuration = builder.Configuration;
 
 //REGISTRO DE INTERFACES
