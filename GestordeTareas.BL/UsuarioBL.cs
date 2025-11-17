@@ -1,85 +1,122 @@
 ﻿using GestordeTaras.EN;
-using GestordeTareas.DAL;
+using GestordeTareas.BL.Services;
 using GestordeTareas.DAL.Interfaces;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace GestordeTareas.BL
 {
     public class UsuarioBL
     {
-        private readonly IUsuarioDAL _UsuarioDAL;
+        private readonly IUsuarioDAL _usuarioDAL;
+        private readonly ISeguridadService _seguridadService;
 
-        public UsuarioBL(IUsuarioDAL usuarioDAL)
+        public UsuarioBL(IUsuarioDAL usuarioDAL, ISeguridadService seguridadService)
         {
-            _UsuarioDAL = usuarioDAL;
+            _usuarioDAL = usuarioDAL;
+            _seguridadService = seguridadService;
         }
+
+        // ---------------- CRUD Usuario ----------------
         public async Task<int> Create(Usuario usuario)
         {
-            return await _UsuarioDAL.CreateAsync(usuario);
+            usuario.Pass = _seguridadService.HashPassword(usuario.Pass);
+            return await _usuarioDAL.CreateAsync(usuario);
         }
 
         public async Task<int> Update(Usuario usuario)
         {
-            return await _UsuarioDAL.UpdateAsync(usuario);
+            // Solo re-hashea la contraseña si fue modificada
+            if (!string.IsNullOrEmpty(usuario.Pass))
+                usuario.Pass = _seguridadService.HashPassword(usuario.Pass);
+
+            return await _usuarioDAL.UpdateAsync(usuario);
         }
 
         public async Task<int> Delete(Usuario usuario)
         {
-            return await _UsuarioDAL.DeleteAsync(usuario);
+            return await _usuarioDAL.DeleteAsync(usuario);
         }
 
         public async Task<Usuario> GetByIdAsync(Usuario usuario)
         {
-            return await _UsuarioDAL.GetByIdAsync(usuario);
+            return await _usuarioDAL.GetByIdAsync(usuario);
         }
 
-        // Método para obtener un usuario por su nombre de usuario
         public async Task<Usuario> GetByNombreUsuarioAsync(Usuario usuario)
         {
-            return await _UsuarioDAL.GetByNombreUsuarioAsync(usuario);
+            return await _usuarioDAL.GetByNombreUsuarioAsync(usuario);
         }
 
         public async Task<List<Usuario>> GetAllAsync()
         {
-            return await _UsuarioDAL.GetAllAsync();
+            return await _usuarioDAL.GetAllAsync();
         }
 
-        public async Task<List<Usuario>> SearchAsync(Usuario usuarios)
+        public async Task<List<Usuario>> SearchAsync(Usuario usuario)
         {
-            return await _UsuarioDAL.SearchAsync(usuarios);
+            return await _usuarioDAL.SearchAsync(usuario);
         }
 
         public async Task<List<Usuario>> SearchIncludeRoleAsync(Usuario user, string query, string filter)
         {
-            return await _UsuarioDAL.SearchIncludeRoleAsync(user, query, filter);
+            return await _usuarioDAL.SearchIncludeRoleAsync(user, query, filter);
         }
 
-        public async Task<Usuario> LoginAsync(Usuario usuarios)
+        // ---------------- Login ----------------
+        public async Task<Usuario> LoginAsync(Usuario usuario)
         {
-            return await _UsuarioDAL.LoginAsync(usuarios);
+            var usuarioDb = await _usuarioDAL.GetByNombreUsuarioAsync(usuario);
+            if (usuarioDb != null && _seguridadService.VerifyPassword(usuario.Pass, usuarioDb.Pass))
+                return usuarioDb;
+
+            return null;
         }
 
-        // Método para generar un token de restablecimiento de contraseña
+        // ---------------- Restablecimiento de contraseña ----------------
         public async Task<int> GenerarCodigoRestablecimientoAsync(Usuario usuario)
         {
-            return await _UsuarioDAL.GenerarCodigoRestablecimientoAsync(usuario);
+            int codigo = new Random().Next(100000, 999999);
+            string codigoHasheado = _seguridadService.HashPassword(codigo.ToString());
+
+            var resetCode = new PasswordResetCode
+            {
+                IdUsuario = usuario.Id,
+                Codigo = codigoHasheado,
+                Expiration = DateTime.Now.AddMinutes(15)
+            };
+
+            return await _usuarioDAL.AddResetCodeAsync(resetCode);
         }
 
-        // Método para validar un token de restablecimiento de contraseña
-        public async Task<bool> ValidarCodigoRestablecimientoAsync(int Idusuario, string codigo)
+        public async Task<bool> ValidarCodigoRestablecimientoAsync(int idUsuario, string codigo)
         {
-            return await _UsuarioDAL.ValidarCodigoRestablecimientoAsync(Idusuario, codigo);
+            string codigoHasheado = _seguridadService.HashPassword(codigo);
+            var resetCode = await _usuarioDAL.GetResetCodeAsync(idUsuario, codigoHasheado);
+
+            return resetCode != null && resetCode.Expiration >= DateTime.Now;
         }
 
-        // Método para restablecer la contraseña del usuario usando un token
-        public async Task<int> RestablecerContrasenaAsync(int Idusuario, string codigo, string nuevaContrasena)
+        public async Task<int> RestablecerContrasenaAsync(int idUsuario, string codigo, string nuevaContrasena)
         {
-            return await _UsuarioDAL.RestablecerContrasenaAsync(Idusuario, codigo, nuevaContrasena);
-        }
+            // Validación del código
+            bool codigoValido = await ValidarCodigoRestablecimientoAsync(idUsuario, codigo);
+            if (!codigoValido) throw new Exception("Código inválido o expirado");
 
+            // Obtener usuario
+            var usuario = await _usuarioDAL.GetByIdAsync(new Usuario { Id = idUsuario });
+            usuario.Pass = _seguridadService.HashPassword(nuevaContrasena);
+
+            // Actualizar contraseña
+            int result = await _usuarioDAL.UpdateAsync(usuario);
+
+            // Remover código de restablecimiento
+            var resetCode = await _usuarioDAL.GetResetCodeAsync(idUsuario, _seguridadService.HashPassword(codigo));
+            if (resetCode != null)
+                await _usuarioDAL.RemoveResetCodeAsync(resetCode);
+
+            return result;
+        }
     }
 }

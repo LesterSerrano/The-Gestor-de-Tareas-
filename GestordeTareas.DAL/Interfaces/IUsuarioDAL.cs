@@ -1,8 +1,5 @@
 ﻿using GestordeTaras.EN;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace GestordeTareas.DAL.Interfaces
@@ -20,9 +17,9 @@ namespace GestordeTareas.DAL.Interfaces
         Task<Usuario> LoginAsync(Usuario usuario);
 
         // Métodos de restablecimiento de contraseña
-        Task<int> GenerarCodigoRestablecimientoAsync(Usuario usuario);
-        Task<bool> ValidarCodigoRestablecimientoAsync(int idUsuario, string codigo);
-        Task<int> RestablecerContrasenaAsync(int idUsuario, string codigo, string nuevaContrasena);
+        Task<int> AddResetCodeAsync(PasswordResetCode resetCode);
+        Task<PasswordResetCode> GetResetCodeAsync(int idUsuario, string codigo);
+        Task<int> RemoveResetCodeAsync(PasswordResetCode resetCode);
 
         // Métodos internos que la BL no necesita exponer (se quedan en la clase)
         Task<string> TieneReferenciasAsync(int usuarioId);

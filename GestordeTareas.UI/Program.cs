@@ -9,6 +9,7 @@ using GestordeTareas.DAL.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using AutoMapper;
 using System.Reflection;
+using GestordeTareas.BL.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("GestordeTareasUIContextConnection") ?? throw new InvalidOperationException("Connection string 'GestordeTareasUIContextConnection' not found.");
@@ -20,6 +21,7 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
 
 //REGISTRO DE INTERFACES
 builder.Services.AddScoped<IUsuarioDAL, UsuarioDAL>();
+builder.Services.AddScoped<ISeguridadService, SeguridadService>();
 
 // REGISTRO DE BL
 builder.Services.AddControllersWithViews();
