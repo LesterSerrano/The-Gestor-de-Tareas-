@@ -1,51 +1,64 @@
 ﻿using GestordeTaras.EN;
-using GestordeTareas.DAL;
-using System;
+using GestordeTareas.DAL.Interfaces;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace GestordeTareas.BL
 {
     public class ProyectoBL
     {
+        private readonly IProyectoDAL _proyectoDAL;
+
+        public ProyectoBL(IProyectoDAL proyectoDAL)
+        {
+            _proyectoDAL = proyectoDAL;
+        }
+
         public async Task<int> CreateAsync(Proyecto proyecto)
         {
-            return await ProyectoDAL.CreateAsync(proyecto);
+            return await _proyectoDAL.CreateAsync(proyecto);
         }
+
         public async Task<int> UpdateAsync(Proyecto proyecto)
         {
-            return await ProyectoDAL.UpdateAsync(proyecto);
+            return await _proyectoDAL.UpdateAsync(proyecto);
         }
+
         public async Task<int> DeleteAsync(Proyecto proyecto)
         {
-            return await ProyectoDAL.DeleteAsync(proyecto);
+            return await _proyectoDAL.DeleteAsync(proyecto);
         }
+
         public async Task<Proyecto> GetByIdAsync(Proyecto proyecto)
         {
-            return await ProyectoDAL.GetByIdAsync(proyecto);
+            return await _proyectoDAL.GetByIdAsync(proyecto);
         }
 
         public async Task<List<Proyecto>> GetAllAsync()
         {
-            return await ProyectoDAL.GetAllAsync();
+            return await _proyectoDAL.GetAllAsync();
+        }       
+
+        public async Task<bool> ExisteCodigoAccesoAsync(string codigoAcceso)
+        {
+            return await _proyectoDAL.ExisteCodigoAccesoAsync(codigoAcceso);
+        }
+
+        public async Task<List<Proyecto>> BuscarPorTituloOAdministradorAsync(string query)
+        {
+            return await _proyectoDAL.BuscarPorTituloOAdministradorAsync(query);
         }
 
         public string GenerarCodigoAcceso()
         {
-            return ProyectoDAL.GenerarCodigoAcceso(); 
-        }
+            const string caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            var random = new Random();
+            var codigo = new char[8];
 
-        public async Task<bool> ExisteCodigoAccesoAsync(string codigoAcceso)
-        {
-            return await ProyectoDAL.ExisteCodigoAccesoAsync(codigoAcceso); 
-        }
+            for (int i = 0; i < codigo.Length; i++)
+                codigo[i] = caracteres[random.Next(caracteres.Length)];
 
-        //MÉTODO QUE LLAMA AL DE PODER BUSCAR PROYECTO POR TITULO
-        public async Task<List<Proyecto>> BuscarPorTituloOAdministradorAsync(string query)
-        {
-            return await ProyectoDAL.BuscarPorTituloOAdministradorAsync(query);
+            return new string(codigo);
         }
     }
 }

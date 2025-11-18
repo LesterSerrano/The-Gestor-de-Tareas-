@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using BCrypt.Net;
 
 namespace GestordeTareas.BL.Services
 {
@@ -11,14 +12,20 @@ namespace GestordeTareas.BL.Services
     {
         public string HashPassword(string password)
         {
-            using var md5 = MD5.Create();
-            var hashBytes = md5.ComputeHash(Encoding.ASCII.GetBytes(password));
-            return string.Concat(hashBytes.Select(b => b.ToString("x2").ToLower()));
+            if (string.IsNullOrEmpty(password))
+            {
+                return null;
+            }
+            return BCrypt.Net.BCrypt.HashPassword(password, 10);
         }
 
         public bool VerifyPassword(string password, string hashedPassword)
         {
-            return HashPassword(password) == hashedPassword;
+            if (string.IsNullOrEmpty(password) || string.IsNullOrEmpty(hashedPassword))
+            {
+                return false;
+            }
+            return BCrypt.Net.BCrypt.Verify(password, hashedPassword);
         }
     }
 }

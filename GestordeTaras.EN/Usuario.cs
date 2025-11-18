@@ -17,25 +17,24 @@ namespace GestordeTaras.EN
         public string Nombre { get; set; } = string.Empty;
 
         [MaxLength(50, ErrorMessage = "Maximo 50 caracteres")]
-        public string? Apellido { get; set; }  // <- ahora nullable
+        public string? Apellido { get; set; }  
 
         [Required(ErrorMessage = "Campo obligatorio")]
         [MaxLength(100, ErrorMessage = "Maximo 100 caracteres")]
         [Display(Name = "Correo Electrónico")]
         public string NombreUsuario { get; set; } = string.Empty;
 
-        // Google no trae contraseña => debe ser nullable
         public string? Pass { get; set; }
 
         [NotMapped]
         public string? ConfirmarPass { get; set; }
 
         [MaxLength(20, ErrorMessage = "Maximo 20 caracteres")]
-        public string? Telefono { get; set; }  // <- ahora nullable
+        public string? Telefono { get; set; } 
 
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = true)]
         [Display(Name = "Fecha de nacimiento")]
-        public DateTime? FechaNacimiento { get; set; } = DateTime.Now;  // <- ahora nullable
+        public DateTime? FechaNacimiento { get; set; } = DateTime.Now;  
 
         [Required(ErrorMessage = "El estado es requerido")]
         [Display(Name = "Estado")]

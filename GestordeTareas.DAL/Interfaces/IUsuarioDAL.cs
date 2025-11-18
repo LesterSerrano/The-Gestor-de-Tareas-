@@ -14,7 +14,7 @@ namespace GestordeTareas.DAL.Interfaces
         Task<List<Usuario>> GetAllAsync();
         Task<List<Usuario>> SearchAsync(Usuario usuario);
         Task<List<Usuario>> SearchIncludeRoleAsync(Usuario user, string query, string filter);
-        Task<Usuario> LoginAsync(Usuario usuario);
+        //Task<Usuario> LoginAsync(Usuario usuario);
 
         // Métodos de restablecimiento de contraseña
         Task<int> AddResetCodeAsync(PasswordResetCode resetCode);

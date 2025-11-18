@@ -1,73 +1,68 @@
 ﻿using GestordeTaras.EN;
+using GestordeTareas.DAL.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace GestordeTareas.DAL
 {
-    public class PrioridadDAL
+    public class PrioridadDAL : IPrioridadDAL
     {
-        //--------------------------------METODO CREAR PRIORIDAD--------------------------
-        public static async Task<int> CreateAsync(Prioridad prioridad)
+        private readonly ContextoBD _dbContext;
+
+        public PrioridadDAL(ContextoBD dbContext)
         {
-            int result = 0;
-            using (var contextoBD = new ContextoBD())
-            {
-                contextoBD.Prioridad.Add(prioridad);
-                result = await contextoBD.SaveChangesAsync();
-            }
-            return result;
+            _dbContext = dbContext;
+        }
+        //--------------------------------METODO CREAR PRIORIDAD--------------------------
+        public async Task<int> CreateAsync(Prioridad prioridad)
+        {
+
+                _dbContext.Prioridad.Add(prioridad);
+                return await _dbContext.SaveChangesAsync();
+
         }
 
         //--------------------------------METODO MODIFICAR PRIORIDAD--------------------------
-        public static async Task<int> UpdateAsync(Prioridad prioridad)
+        public async Task<int> UpdateAsync(Prioridad prioridad)
         {
-            int result = 0;
-            using (var contextoBD = new ContextoBD())
-            {
-                var prioridadBD = await contextoBD.Prioridad.FirstOrDefaultAsync(p => p.Id == prioridad.Id);
-                if (prioridadBD != null)
-                {
-                    prioridadBD.Nombre = prioridad.Nombre;
-                    contextoBD.Update(prioridadBD);
-                    result = await contextoBD.SaveChangesAsync();
-                }
-            }
-            return result;
+            var prioridadDB = await _dbContext.Prioridad.FirstOrDefaultAsync(p => p.Id == prioridad.Id);
+
+            if (prioridadDB == null)
+                return 0;
+
+            prioridadDB.Nombre = prioridad.Nombre;
+
+            _dbContext.Prioridad.Update(prioridadDB);
+            return await _dbContext.SaveChangesAsync();
         }
 
         //--------------------------------METODO ELIMINAR PRIORIDAD--------------------------
-        public static async Task<int> DeleteAsync(Prioridad prioridad)
+        public async Task<int> DeleteAsync(Prioridad prioridad)
         {
-            int result = 0;
-            using (var contextoBD = new ContextoBD())
-            {
-                var prioridadBD = await contextoBD.Prioridad.FirstOrDefaultAsync(p => p.Id == prioridad.Id);
-                if (prioridadBD != null)
-                {
-                    contextoBD.Prioridad.Remove(prioridadBD);
-                    result = await contextoBD.SaveChangesAsync();
-                }
-            }
-            return result;
+            var prioridadDB = await _dbContext.Prioridad.FirstOrDefaultAsync(p => p.Id == prioridad.Id);
+
+            if (prioridadDB == null)
+                return 0;
+
+            _dbContext.Prioridad.Remove(prioridadDB);
+            return await _dbContext.SaveChangesAsync();
         }
 
         //--------------------------METODO BUSCAR POR ID--------------------------------------------
-        public static async Task<Prioridad> GetByIdAsync(Prioridad prioridad)
+        public async Task<Prioridad> GetByIdAsync(Prioridad prioridad)
         {
-            using (var contextoBD = new ContextoBD())
-            {
-                return await contextoBD.Prioridad.FirstOrDefaultAsync(c => c.Id == prioridad.Id);
-            }
+            return await _dbContext.Prioridad
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Id == prioridad.Id);
         }
 
         //--------------------------------METODO OBTENER TODAS LAS PRIORIDADES--------------------------
-        public static async Task<List<Prioridad>> GetAllAsync()
+        public async Task<List<Prioridad>> GetAllAsync()
         {
-            using (var contextoBD = new ContextoBD())
-            {
-                return await contextoBD.Prioridad.ToListAsync();
-            }
+            return await _dbContext.Prioridad
+                .AsNoTracking()
+                .ToListAsync();
         }
     }
 }

@@ -94,13 +94,13 @@ namespace GestordeTareas.DAL
             return await select.ToListAsync();
         }
 
-        public async Task<Usuario> LoginAsync(Usuario usuario)
-        {
-            return await _dbContext.Usuario.FirstOrDefaultAsync(u =>
-                u.NombreUsuario == usuario.NombreUsuario &&
-                u.Pass == usuario.Pass &&
-                u.Status == (byte)User_Status.ACTIVO);
-        }
+        //public async Task<Usuario> LoginAsync(Usuario usuario)
+        //{
+        //    return await _dbContext.Usuario.FirstOrDefaultAsync(u =>
+        //        u.NombreUsuario == usuario.NombreUsuario &&
+        //        u.Pass == usuario.Pass &&
+        //        u.Status == (byte)User_Status.ACTIVO);
+        //}
 
         // ---------------- Métodos de restablecimiento de contraseña ----------------
         public async Task<int> AddResetCodeAsync(PasswordResetCode resetCode)

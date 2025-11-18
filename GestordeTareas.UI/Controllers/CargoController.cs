@@ -11,9 +11,9 @@ namespace GestordeTareas.UI.Controllers
     {
         private readonly CargoBL _cargoBL;
 
-        public CargoController()
+        public CargoController(CargoBL cargoBL)
         {
-            _cargoBL = new CargoBL();
+            _cargoBL = cargoBL;
         }
 
         public async Task<ActionResult> Index()

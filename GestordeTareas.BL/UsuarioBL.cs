@@ -18,16 +18,22 @@ namespace GestordeTareas.BL
             _seguridadService = seguridadService;
         }
 
-        // ---------------- CRUD Usuario ----------------
         public async Task<int> Create(Usuario usuario)
         {
+            var existingUser = await _usuarioDAL.GetByNombreUsuarioAsync(usuario);
+
+            if (existingUser != null)
+            {
+                throw new Exception("El correo electrónico ya está registrado en el sistema.");
+            }
+
             usuario.Pass = _seguridadService.HashPassword(usuario.Pass);
+
             return await _usuarioDAL.CreateAsync(usuario);
         }
 
         public async Task<int> Update(Usuario usuario)
         {
-            // Solo re-hashea la contraseña si fue modificada
             if (!string.IsNullOrEmpty(usuario.Pass))
                 usuario.Pass = _seguridadService.HashPassword(usuario.Pass);
 

@@ -11,9 +11,9 @@ namespace GestordeTareas.UI.Controllers
     {
         private readonly CategoriaBL _categoriaBL;
 
-        public CategoriaController()
+        public CategoriaController(CategoriaBL categoriaBL)
         {
-            _categoriaBL = new CategoriaBL();
+            _categoriaBL = categoriaBL;
         }
 
         public async Task<ActionResult> Index()
@@ -24,7 +24,7 @@ namespace GestordeTareas.UI.Controllers
 
         public async Task<ActionResult> Details(int id)
         {
-            var categoria = await _categoriaBL.GetById(new Categoria { Id = id });
+            var categoria = await _categoriaBL.GetByIdAsync(new Categoria { Id = id });
             return PartialView("Details", categoria);
         }
 
@@ -51,7 +51,7 @@ namespace GestordeTareas.UI.Controllers
 
         public async Task<ActionResult> Edit(int id)
         {
-            var categoria = await _categoriaBL.GetById(new Categoria { Id = id });
+            var categoria = await _categoriaBL.GetByIdAsync(new Categoria { Id = id });
             return PartialView("Edit", categoria);
         }
 
@@ -73,7 +73,7 @@ namespace GestordeTareas.UI.Controllers
 
         public async Task<ActionResult> Delete(int id)
         {
-            var categoria = await _categoriaBL.GetById(new Categoria { Id = id });
+            var categoria = await _categoriaBL.GetByIdAsync(new Categoria { Id = id });
             return PartialView("Delete", categoria);
         }
 

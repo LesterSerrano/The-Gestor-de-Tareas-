@@ -1,5 +1,6 @@
 ﻿using GestordeTaras.EN;
 using GestordeTareas.DAL;
+using GestordeTareas.DAL.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,25 +11,31 @@ namespace GestordeTareas.BL
 {
     public class PrioridadBL
     {
+        private IPrioridadDAL _prioridadDAL;
+
+        public PrioridadBL(IPrioridadDAL prioridadDAL)
+        {
+            _prioridadDAL = prioridadDAL;
+        }
         public async Task<int> CreateAsync(Prioridad prioridad)
         {
-            return await PrioridadDAL.CreateAsync(prioridad);
+            return await _prioridadDAL.CreateAsync(prioridad);
         }
         public async Task<int> UpdateAsync(Prioridad prioridad)
         {
-            return await PrioridadDAL.UpdateAsync(prioridad);
+            return await _prioridadDAL.UpdateAsync(prioridad);
         }
         public async Task<int> DeleteAsync(Prioridad prioridad)
         {
-            return await PrioridadDAL.DeleteAsync(prioridad);
+            return await _prioridadDAL.DeleteAsync(prioridad);
         }
-        public async Task<Prioridad> GetById(Prioridad prioridad)
+        public async Task<Prioridad> GetByIdAsync(Prioridad prioridad)
         {
-            return await PrioridadDAL.GetByIdAsync(prioridad);
+            return await _prioridadDAL.GetByIdAsync(prioridad);
         }
         public async Task<List<Prioridad>> GetAllAsync()
         {
-            return await PrioridadDAL.GetAllAsync();
+            return await _prioridadDAL.GetAllAsync();
         }
     }
 }
