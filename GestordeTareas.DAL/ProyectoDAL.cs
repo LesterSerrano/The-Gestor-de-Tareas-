@@ -1,4 +1,5 @@
 ﻿using GestordeTaras.EN;
+using GestordeTareas.DAL.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -9,48 +10,24 @@ using Microsoft.Extensions.Logging;
 
 namespace GestordeTareas.DAL
 {
-    public class ProyectoDAL : IProyecto
+    public class ProyectoDAL : IProyectoDAL
     {
-        private readonly ContextoBD _contextoBD;
-        private readonly ILogger<ProyectoDAL> _logger;
-        public ProyectoDAL(ContextoBD contextoBD, ILogger<ProyectoDAL> logger)
+        private readonly ContextoBD _dbContext;
+
+        public ProyectoDAL(ContextoBD dbContext)
         {
-            _contextoBD = contextoBD;
-            _logger = logger;
-        }
-        // -------------------------------OBTENER TODAS LAS PROYECTOS
-        public  async Task<IEnumerable<Proyecto>> GetAllProyectAsync()
-        {
-            var proyectos = await _contextoBD.Proyecto
-                .AsNoTracking()
-                .Include(p => p.Usuario)
-                .Include(p => p.ProyectoUsuario)
-                    .ThenInclude(pu => pu.Usuario)
-                .ToListAsync();
-                if(proyectos.Count == 0)
-                {
-                    _logger.LogWarning("No se encontraron proyectos en la base de datos.");
-                }
-                return proyectos;
-        }
-        // ----------------------------ONTENER TODOS LOS PROYECTOS POR ID
-        public async Task<Proyecto> GetByIdAsync (int id)
-        {
-            
-        }
-        // Crear un proyecto
-        public static async Task<int> CreateAsync(Proyecto proyecto)
-        {
-            using var dbContext = new ContextoBD();
-            await dbContext.Proyecto.AddAsync(proyecto);
-            return await dbContext.SaveChangesAsync();
+            _dbContext = dbContext;
         }
 
-        // Actualizar un proyecto
-        public static async Task<int> UpdateAsync(Proyecto proyecto)
+        public async Task<int> CreateAsync(Proyecto proyecto)
         {
-            using var dbContext = new ContextoBD();
-            var proyectoDB = await dbContext.Proyecto.FirstOrDefaultAsync(p => p.Id == proyecto.Id);
+            await _dbContext.Proyecto.AddAsync(proyecto);
+            return await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<int> UpdateAsync(Proyecto proyecto)
+        {
+            var proyectoDB = await _dbContext.Proyecto.FirstOrDefaultAsync(p => p.Id == proyecto.Id);
 
             if (proyectoDB == null)
                 return 0;
@@ -61,28 +38,24 @@ namespace GestordeTareas.DAL
             proyectoDB.FechaFinalizacion = proyecto.FechaFinalizacion;
             proyectoDB.CodigoAcceso = proyecto.CodigoAcceso;
 
-            dbContext.Proyecto.Update(proyectoDB);
-            return await dbContext.SaveChangesAsync();
+            _dbContext.Proyecto.Update(proyectoDB);
+            return await _dbContext.SaveChangesAsync();
         }
 
-        // Eliminar un proyecto
-        public static async Task<int> DeleteAsync(Proyecto proyecto)
+        public async Task<int> DeleteAsync(Proyecto proyecto)
         {
-            using var dbContext = new ContextoBD();
-            var proyectoDB = await dbContext.Proyecto.FirstOrDefaultAsync(p => p.Id == proyecto.Id);
+            var proyectoDB = await _dbContext.Proyecto.FirstOrDefaultAsync(p => p.Id == proyecto.Id);
 
             if (proyectoDB == null)
                 return 0;
 
-            dbContext.Proyecto.Remove(proyectoDB);
-            return await dbContext.SaveChangesAsync();
+            _dbContext.Proyecto.Remove(proyectoDB);
+            return await _dbContext.SaveChangesAsync();
         }
 
-        // Obtener proyecto por ID
-        public static async Task<Proyecto> GetByIdAsync(Proyecto proyecto)
+        public async Task<Proyecto> GetByIdAsync(Proyecto proyecto)
         {
-            using var dbContext = new ContextoBD();
-            var proyectoDB = await dbContext.Proyecto
+            var proyectoDB = await _dbContext.Proyecto
                 .Include(p => p.Usuario)
                 .FirstOrDefaultAsync(p => p.Id == proyecto.Id);
 
@@ -92,48 +65,26 @@ namespace GestordeTareas.DAL
             return proyectoDB;
         }
 
-        // Obtener todos los proyectos
-        public static async Task<List<Proyecto>> GetAllAsync()
+        public async Task<List<Proyecto>> GetAllAsync()
         {
-            using var dbContext = new ContextoBD();
-            return await dbContext.Proyecto
+            return await _dbContext.Proyecto
                 .Include(p => p.Usuario)
                 .Include(p => p.ProyectoUsuario)
                     .ThenInclude(pu => pu.Usuario)
                 .ToListAsync();
         }
 
-        // Generar código de acceso único
-        public static string GenerarCodigoAcceso()
+        public async Task<bool> ExisteCodigoAccesoAsync(string codigoAcceso)
         {
-            const string caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            var random = new Random();
-            var codigo = new char[8]; // Longitud del código
-
-            for (int i = 0; i < codigo.Length; i++)
-                codigo[i] = caracteres[random.Next(caracteres.Length)];
-
-            return new string(codigo);
+            return await _dbContext.Proyecto.AnyAsync(p => p.CodigoAcceso == codigoAcceso);
         }
 
-        // Verificar si un código de acceso existe
-        public static async Task<bool> ExisteCodigoAccesoAsync(string codigoAcceso)
+        public async Task<List<Proyecto>> BuscarPorTituloOAdministradorAsync(string query)
         {
-            using var dbContext = new ContextoBD();
-            return await dbContext.Proyecto.AnyAsync(p => p.CodigoAcceso == codigoAcceso);
-        }
-
-        // Buscar proyecto por título o nombre del administrador
-        public static async Task<IEnumerable<Proyecto>> BuscarPorTituloOAdministradorAsync(string query)
-        {
-            using var dbContext = new ContextoBD();
-            return await dbContext.Proyecto
+            return await _dbContext.Proyecto
                 .Include(p => p.Usuario)
                 .Where(p => p.Titulo.Contains(query) || p.Usuario.Nombre.Contains(query))
                 .ToListAsync();
         }
     }
 }
-
-
-

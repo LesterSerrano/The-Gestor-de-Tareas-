@@ -24,7 +24,11 @@ namespace GestordeTareas.UI.Controllers
 
         public async Task<ActionResult> Details(int id)
         {
+<<<<<<< HEAD
             var prioridad = await _prioridadBL.GetByIdAsync(id);
+=======
+            var prioridad = await _prioridadBL.GetByIdAsync(new Prioridad { Id = id });
+>>>>>>> 6f3904e1ef769397f15b3f638d17e031b23152fb
             return PartialView("Details", prioridad);
         }
 
@@ -51,7 +55,11 @@ namespace GestordeTareas.UI.Controllers
 
         public async Task<ActionResult> Edit(int id)
         {
+<<<<<<< HEAD
             var prioridad = await _prioridadBL.GetByIdAsync(id);
+=======
+            var prioridad = await _prioridadBL.GetByIdAsync(new Prioridad { Id = id });
+>>>>>>> 6f3904e1ef769397f15b3f638d17e031b23152fb
             return PartialView("Edit", prioridad);
         }
 
@@ -73,7 +81,11 @@ namespace GestordeTareas.UI.Controllers
 
         public async Task<ActionResult> Delete(int id)
         {
+<<<<<<< HEAD
             var prioridad = await _prioridadBL.GetByIdAsync(id);
+=======
+            var prioridad = await _prioridadBL.GetByIdAsync(new Prioridad { Id = id });
+>>>>>>> 6f3904e1ef769397f15b3f638d17e031b23152fb
             return PartialView("Delete", prioridad);
         }
 

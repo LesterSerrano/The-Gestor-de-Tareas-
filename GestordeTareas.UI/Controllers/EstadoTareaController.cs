@@ -11,9 +11,9 @@ namespace GestordeTareas.UI.Controllers
     {
         private readonly EstadoTareaBL _estadoTareaBL;
 
-        public EstadoTareaController()
+        public EstadoTareaController(EstadoTareaBL estadoTareaBL)
         {
-            _estadoTareaBL = new EstadoTareaBL();
+            _estadoTareaBL = estadoTareaBL;
         }
 
         public async Task<ActionResult> Index()

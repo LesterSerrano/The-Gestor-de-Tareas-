@@ -10,153 +10,83 @@ using System.Threading.Tasks;
 
 namespace GestordeTareas.DAL
 {
-    public class CategoriaDAL : ICategoria
+    public class CategoriaDAL : ICategoriaDAL
     {
-        /// <summary>
-        ///  Task<Categoria> GetCategoriaByIdAsync(Guid id);
-        // Task<IEnumerable<Categoria>> GetAllCategoriasAsync();
-        // Task<Categoria> CreateCategoriaAsync(Categoria Categoria);
-        // Task<Categoria> UpdateCategoriaAsync(Categoria Categoria);
-        // Task<bool> DeleteCategoriaAsync(Guid id);
-        /// </summary>
         private readonly ContextoBD _dbContext;
-        private readonly ILogger<CategoriaDAL> _logger;
-        public CategoriaDAL(ContextoBD dbContext, ILogger<CategoriaDAL> logger)
+
+        public CategoriaDAL(ContextoBD dbContext)
         {
             _dbContext = dbContext;
-            _logger = logger;
+        }
+        public async Task<int> CreateAsync(Categoria categoria)
+        {
+            _dbContext.Categoria.Add(categoria);
+            return await _dbContext.SaveChangesAsync();
         }
 
-        //traer todas las categorias
-        public async Task<Categoria> GetCategoriaByIdAsync(int id)
+        // Actualizar una Categoría existente
+        public async Task<int> UpdateAsync(Categoria categoria)
         {
-            var categoria = await _dbContext.Categoria
-                .AsNoTracking()
-                .FirstOrDefaultAsync(r => r.Id == id);
-            if (categoria == null)
-            {
-                _logger.LogWarning($"Categoria con ID {id} no encontrado.");
-                return new Categoria
-                {
-                    Id = 0,
-                    Nombre = string.Empty
-                };
-            }
-            return categoria;
-        }
-        public async Task<IEnumerable<Categoria>> GetAllCategoriasAsync()
-        {
-            var categorias = await _dbContext.Categoria
-                .AsNoTracking()
-                .ToListAsync();
-            if (categorias.Count == 0)
-            {
-                _logger.LogWarning("No se encontraron categorias.");
-            }
-            return categorias;
-        }
-        public async Task<Categoria> CreateCategoriaAsync(Categoria categoria)
-        {
-            // Validar si ya existe una categoría con ese nombre
-            var existeCategoria = await _dbContext.Categoria
-                .AsNoTracking()
-                .AnyAsync(c => c.Nombre.ToLower() == categoria.Nombre.ToLower());
+            var categoriaBD = await _dbContext.Categoria.FirstOrDefaultAsync(c => c.Id == categoria.Id);
 
-            if (existeCategoria)
-            {
-                _logger.LogWarning($"La categoría con nombre '{categoria.Nombre}' ya existe.");
+            if (categoriaBD == null) return 0;
 
-                // Retornar un objeto de categoria para decir: "¡weeeeeeeeeeeeeee esto ya existeeeee no seas weoooon!"
-                return new Categoria
-                {
-                    Id = 0,
-                    Nombre = "EXISTE"
-                };
-            }
-
-            // Agregar y guardar
-            await _dbContext.Categoria.AddAsync(categoria);
-            await _dbContext.SaveChangesAsync();
-
-            // Retornar la categoría creada con su Id generado
-            return categoria;
-        }
-
-
-        public async Task<Categoria> UpdateCategoriaAsync(Categoria categoria)
-        {
-            var categoriaBD = await GetCategoriaByIdAsync(categoria.Id); //aqui uso el metodo de traer por Id
-
-            // Verificar si el nuevo nombre ya existe en otra categoria asi como el de creat
-            var nombreEnUso = await _dbContext.Categoria
-                .AsNoTracking()
-                .AnyAsync(c => c.Nombre.ToLower() == categoria.Nombre.ToLower() && c.Id != categoria.Id);
-
-            if (nombreEnUso)
-            {
-                _logger.LogWarning($"No se puede actualizar. El nombre '{categoria.Nombre}' ya está en uso por otra categoría.");
-
-                return new Categoria
-                {
-                    Id = 0,
-                    Nombre = "NOMBRE_DUPLICADO"
-                };
-            }
-            // Actualizacion en cuestion
             categoriaBD.Nombre = categoria.Nombre;
-
             _dbContext.Update(categoriaBD);
-            await _dbContext.SaveChangesAsync();
-
-            return categoriaBD;
+            return await _dbContext.SaveChangesAsync();
         }
 
-        public async Task<bool> DeleteCategoriaAsync(int id)
+        // Eliminar una Categoría (verifica tareas asociadas)
+        public async Task<int> DeleteAsync(Categoria categoria)
         {
-            var categoriaBD = await GetCategoriaByIdAsync(id);
+            var categoriaBD = await _dbContext.Categoria.FirstOrDefaultAsync(c => c.Id == categoria.Id);
 
-            if (categoriaBD.Id == 0)
-            {
-                _logger.LogWarning($"No se puede eliminar. La categoría con ID {id} no existe.");
-                return false;
-            }
+            if (categoriaBD == null) return 0;
 
-            // Verificar si hay tareas asociadas a esta categoría
-            bool tieneTareasAsociadas = await _dbContext.Tarea
-                .AsNoTracking()
-                .AnyAsync(t => t.IdCategoria == categoriaBD.Id);
-
-            if (tieneTareasAsociadas)
-            {
-                _logger.LogWarning($"No se puede eliminar la categoría con ID {id} porque tiene tareas asociadas.");
-                return false;
-            }
+            bool isAssociatedWithTarea = await _dbContext.Tarea.AnyAsync(t => t.IdCategoria == categoriaBD.Id);
+            if (isAssociatedWithTarea)
+                throw new Exception("No se puede eliminar la categoría porque está asociada con una tarea.");
 
             _dbContext.Categoria.Remove(categoriaBD);
-            await _dbContext.SaveChangesAsync();
+            return await _dbContext.SaveChangesAsync();
+        }
 
-            return true;
+        // Obtener una Categoría por ID
+        public async Task<Categoria> GetByIdAsync(Categoria categoria)
+        {
+            return await _dbContext.Categoria.FirstOrDefaultAsync(c => c.Id == categoria.Id);
+        }
+
+        // Obtener todas las Categorías
+        public async Task<List<Categoria>> GetAllAsync()
+        {
+            return await _dbContext.Categoria.ToListAsync();
+        }
+
+        // Construir consulta dinámica (para búsquedas)
+        internal static IQueryable<Categoria> QuerySelect(IQueryable<Categoria> query, Categoria category)
+        {
+            if (category.Id > 0)
+                query = query.Where(c => c.Id == category.Id);
+
+            if (!string.IsNullOrWhiteSpace(category.Nombre))
+                query = query.Where(c => c.Nombre.Contains(category.Nombre));
+
+            query = query.OrderByDescending(c => c.Id);
+
+            if (category.Top_Aux > 0)
+                query = query.Take(category.Top_Aux);
+
+            return query;
+        }
+
+        // Buscar Categorías según filtros dinámicos
+        public async Task<List<Categoria>> SearchAsync(Categoria category)
+        {
+            var select = _dbContext.Categoria.AsQueryable();
+            select = QuerySelect(select, category);
+            return await select.ToListAsync();
         }
     }
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

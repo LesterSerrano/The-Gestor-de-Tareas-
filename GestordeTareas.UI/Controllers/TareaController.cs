@@ -20,18 +20,26 @@ namespace GestordeTareas.UI.Controllers
         private readonly ProyectoBL _proyectoBL;
         private readonly UsuarioBL _usuarioBL;
         private readonly ProyectoUsuarioBL _proyectoUsuarioBL;
-        private readonly ElegirTareaBL _elegirTareaBL;
+        //private readonly ElegirTareaBL _elegirTareaBL;
 
-        public TareaController()
+        public TareaController(
+            TareaBL tareaBL,
+            CategoriaBL categoriaBL,
+            PrioridadBL prioridadBL,
+            EstadoTareaBL estadoTareaBL,
+            ProyectoBL proyectoBL,
+            UsuarioBL usuarioBL,
+            ProyectoUsuarioBL proyectoUsuarioBL)
+            //ElegirTareaBL elegirTareaBL)
         {
-            _tareaBL = new TareaBL();
-            _categoriaBL = new CategoriaBL();
-            _prioridadBL = new PrioridadBL();
-            _estadoTareaBL = new EstadoTareaBL();
-            _proyectoBL = new ProyectoBL();
-            _usuarioBL = new UsuarioBL();
-            _proyectoUsuarioBL = new ProyectoUsuarioBL();
-            _elegirTareaBL = new ElegirTareaBL();
+            _tareaBL = tareaBL;
+            _categoriaBL = categoriaBL;
+            _prioridadBL = prioridadBL;
+            _estadoTareaBL = estadoTareaBL;
+            _proyectoBL = proyectoBL;
+            _usuarioBL = usuarioBL;
+            _proyectoUsuarioBL = proyectoUsuarioBL;
+            //_elegirTareaBL = elegirTareaBL;
         }
 
         [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
@@ -54,7 +62,7 @@ namespace GestordeTareas.UI.Controllers
 
         public async Task<ActionResult> Details(int id)
         {
-            var tarea = await _tareaBL.GetById(new Tarea { Id = id });
+            var tarea = await _tareaBL.GetByIdAsync(new Tarea { Id = id });
             return PartialView("Details", tarea);
         }
 
@@ -62,7 +70,7 @@ namespace GestordeTareas.UI.Controllers
         {
             await LoadDropDownListsAsync();
             ViewBag.ProyectoId = idProyecto;
-            ViewBag.EstadoPendienteId = await EstadoTareaDAL.GetEstadoPendienteIdAsync();
+            ViewBag.EstadoPendienteId = await _estadoTareaBL.GetEstadoPendienteIdAsync();
             return PartialView("Create", new Tarea { IdProyecto = idProyecto });
         }
 
@@ -71,10 +79,7 @@ namespace GestordeTareas.UI.Controllers
         [Authorize(Roles = "Administrador, Colaborador")]
         public async Task<ActionResult> Create(Tarea tarea, int idProyecto)
         {
-            int idUsuario = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-
-            if (!User.IsInRole("Administrador") &&
-                !await _proyectoUsuarioBL.IsUsuarioEncargadoAsync(tarea.IdProyecto, idUsuario))
+            if (!await TienePermisoParaProyectoAsync(tarea.IdProyecto))
             {
                 return Json(new { success = false, message = "No tienes permisos para realizar cambios" });
             }
@@ -83,7 +88,7 @@ namespace GestordeTareas.UI.Controllers
             {
                 tarea.IdProyecto = idProyecto;
                 tarea.FechaCreacion = DateTime.Now;
-                tarea.IdEstadoTarea = await EstadoTareaDAL.GetEstadoPendienteIdAsync();
+                tarea.IdEstadoTarea = await _estadoTareaBL.GetEstadoPendienteIdAsync();
 
                 await _tareaBL.CreateAsync(tarea);
                 TempData["SuccessMessage"] = "Tarea creada correctamente.";
@@ -94,6 +99,7 @@ namespace GestordeTareas.UI.Controllers
                 return Json(new { success = false, message = "Error al crear la tarea: " + ex.Message });
             }
         }
+
 
         private async Task LoadDropDownListsAsync()
         {
@@ -106,7 +112,7 @@ namespace GestordeTareas.UI.Controllers
         public async Task<ActionResult> Edit(int id)
         {
             await LoadDropDownListsAsync();
-            return PartialView("Edit", await _tareaBL.GetById(new Tarea { Id = id }));
+            return PartialView("Edit", await _tareaBL.GetByIdAsync(new Tarea { Id = id }));
         }
 
         [HttpPost]
@@ -114,10 +120,7 @@ namespace GestordeTareas.UI.Controllers
         [Authorize(Roles = "Administrador, Colaborador")]
         public async Task<ActionResult> Edit(int id, Tarea tarea)
         {
-            int idUsuario = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-
-            if (!User.IsInRole("Administrador") &&
-                !await _proyectoUsuarioBL.IsUsuarioEncargadoAsync(tarea.IdProyecto, idUsuario))
+            if (!await TienePermisoParaProyectoAsync(tarea.IdProyecto))
             {
                 return Json(new { success = false, message = "No tienes permisos para realizar cambios" });
             }
@@ -134,9 +137,10 @@ namespace GestordeTareas.UI.Controllers
             }
         }
 
+
         public async Task<ActionResult> Delete(int id)
         {
-            return PartialView("Delete", await _tareaBL.GetById(new Tarea { Id = id }));
+            return PartialView("Delete", await _tareaBL.GetByIdAsync(new Tarea { Id = id }));
         }
 
         [HttpPost]
@@ -144,7 +148,7 @@ namespace GestordeTareas.UI.Controllers
         [Authorize(Roles = "Administrador, Colaborador")]
         public async Task<ActionResult> Delete(int id, Tarea tarea)
         {
-            var tareaObtenida = await _tareaBL.GetById(new Tarea { Id = id });
+            var tareaObtenida = await _tareaBL.GetByIdAsync(new Tarea { Id = id });
             if (tareaObtenida == null) return NotFound("Tarea no encontrada");
 
             int idUsuario = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
@@ -173,32 +177,11 @@ namespace GestordeTareas.UI.Controllers
         [Route("Tarea/update-state")]
         public async Task<IActionResult> ActualizarEstadoTarea([FromBody] TareaUpdateModel model)
         {
-            try
-            {
-                using var bdContexto = new ContextoBD();
-                var tareaBD = await bdContexto.Tarea.FirstOrDefaultAsync(t => t.Id == model.IdTarea);
+            var resultado = await _tareaBL.ActualizarEstadoTareaConValidacionAsync(model.IdTarea, model.IdEstadoTarea);
 
-                if (tareaBD == null) return NotFound("Tarea no encontrada");
+            if (!resultado.success) return BadRequest(resultado.mensaje);
 
-                var estadoValido = await bdContexto.EstadoTarea.FindAsync(model.IdEstadoTarea);
-                if (estadoValido == null) return BadRequest("Estado no válido");
-
-                tareaBD.IdEstadoTarea = model.IdEstadoTarea;
-                bdContexto.Update(tareaBD);
-                await bdContexto.SaveChangesAsync();
-
-                return Ok(new { nombreEstado = estadoValido.Nombre });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Error al actualizar la tarea: {ex.Message}");
-            }
-        }
-
-        public class TareaUpdateModel
-        {
-            public int IdTarea { get; set; }
-            public int IdEstadoTarea { get; set; }
+            return Ok(new { nombreEstado = resultado.nombreEstado });
         }
 
         private async Task<bool> VerificarAcceso(int idProyecto)
@@ -213,31 +196,45 @@ namespace GestordeTareas.UI.Controllers
             return usuariosUnidos.Any(u => u.Id == actualUser.Id);
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ElegirTarea(int idTarea)
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> ElegirTarea(int idTarea)
+        //{
+        //    var actualUser = (await _usuarioBL.SearchAsync(new Usuario { NombreUsuario = User.Identity.Name, Top_Aux = 1 }))
+        //                        .FirstOrDefault();
+
+        //    if (actualUser == null) { TempData["ErrorMessage"] = "Usuario no encontrado"; return RedirectToAction("Index"); }
+
+        //    var tarea = await _tareaBL.GetByIdAsync(new Tarea { Id = idTarea });
+        //    if (tarea == null) { TempData["ErrorMessage"] = "Tarea no encontrada"; return RedirectToAction("Index"); }
+
+        //    if (tarea.EstadoTarea.Nombre != "Pendiente")
+        //    {
+        //        TempData["ErrorMessage"] = "La tarea no está en Disponible";
+        //        return RedirectToAction("Index", new { proyectoId = tarea.IdProyecto });
+        //    }
+
+        //    bool resultado = await _elegirTareaBL.ElegirTareaAsync(idTarea, actualUser.Id, tarea.IdProyecto);
+        //    if (resultado) await _tareaBL.ActualizarEstadoTareaAsync(idTarea, 2); // "En Proceso"
+
+        //    TempData[resultado ? "SuccessMessage" : "ErrorMessage"] =
+        //        resultado ? "Tarea elegida correctamente" : "No se pudo elegir la tarea";
+
+        //    return RedirectToAction("Index", new { proyectoId = tarea.IdProyecto });
+        //}
+
+        private async Task<bool> TienePermisoParaProyectoAsync(int idProyecto)
         {
-            var actualUser = (await _usuarioBL.SearchAsync(new Usuario { NombreUsuario = User.Identity.Name, Top_Aux = 1 }))
-                                .FirstOrDefault();
+            // Obtiene el ID del usuario actual
+            int idUsuario = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-            if (actualUser == null) { TempData["ErrorMessage"] = "Usuario no encontrado"; return RedirectToAction("Index"); }
+            // Los administradores siempre tienen permiso
+            if (User.IsInRole("Administrador"))
+                return true;
 
-            var tarea = await _tareaBL.GetById(new Tarea { Id = idTarea });
-            if (tarea == null) { TempData["ErrorMessage"] = "Tarea no encontrada"; return RedirectToAction("Index"); }
-
-            if (tarea.EstadoTarea.Nombre != "Pendiente")
-            {
-                TempData["ErrorMessage"] = "La tarea no está en Disponible";
-                return RedirectToAction("Index", new { proyectoId = tarea.IdProyecto });
-            }
-
-            bool resultado = await _elegirTareaBL.ElegirTareaAsync(idTarea, actualUser.Id, tarea.IdProyecto);
-            if (resultado) await _tareaBL.ActualizarEstadoTareaAsync(idTarea, 2); // "En Proceso"
-
-            TempData[resultado ? "SuccessMessage" : "ErrorMessage"] =
-                resultado ? "Tarea elegida correctamente" : "No se pudo elegir la tarea";
-
-            return RedirectToAction("Index", new { proyectoId = tarea.IdProyecto });
+            // Verifica si el usuario es encargado del proyecto
+            return await _proyectoUsuarioBL.IsUsuarioEncargadoAsync(idProyecto, idUsuario);
         }
+
     }
 }

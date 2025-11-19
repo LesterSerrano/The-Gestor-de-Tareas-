@@ -15,10 +15,16 @@ namespace GestordeTareas.UI.Controllers
         private readonly CategoriaBL _categoriaBL;
         private readonly IMapper _mapper;
 
+<<<<<<< HEAD
         public CategoriaController(CategoriaBL categoriaBL, IMapper mapper)
         {
             _categoriaBL = categoriaBL;
             _mapper = mapper;
+=======
+        public CategoriaController(CategoriaBL categoriaBL)
+        {
+            _categoriaBL = categoriaBL;
+>>>>>>> 6f3904e1ef769397f15b3f638d17e031b23152fb
         }
 
         // GET: /Categoria
@@ -33,10 +39,15 @@ namespace GestordeTareas.UI.Controllers
         // GET: /Categoria/Details/{id}
         public async Task<IActionResult> Details(int id)
         {
+<<<<<<< HEAD
             var categoriaEN = await _categoriaBL.GetByIdAsync(id);
             var categoriaDTO = _mapper.Map<CategoriaReadDTO>(categoriaEN);
 
             return PartialView("Details", categoriaDTO);
+=======
+            var categoria = await _categoriaBL.GetByIdAsync(new Categoria { Id = id });
+            return PartialView("Details", categoria);
+>>>>>>> 6f3904e1ef769397f15b3f638d17e031b23152fb
         }
 
         // GET: /Categoria/Create
@@ -69,10 +80,15 @@ namespace GestordeTareas.UI.Controllers
         // GET: /Categoria/Edit/id
         public async Task<IActionResult> Edit(int id)
         {
+<<<<<<< HEAD
             var categoriaEN = await _categoriaBL.GetByIdAsync(id);
             var dto = _mapper.Map<CategoriaUpdateDto>(categoriaEN);
 
             return PartialView("Edit", dto);
+=======
+            var categoria = await _categoriaBL.GetByIdAsync(new Categoria { Id = id });
+            return PartialView("Edit", categoria);
+>>>>>>> 6f3904e1ef769397f15b3f638d17e031b23152fb
         }
 
         // POST: /Categoria/Edit
@@ -99,10 +115,15 @@ namespace GestordeTareas.UI.Controllers
         // GET: /Categoria/Delete/id
         public async Task<IActionResult> Delete(int id)
         {
+<<<<<<< HEAD
             var categoriaEN = await _categoriaBL.GetByIdAsync(id);
             var dto = _mapper.Map<CategoriaReadDTO>(categoriaEN);
 
             return PartialView("Delete", dto);
+=======
+            var categoria = await _categoriaBL.GetByIdAsync(new Categoria { Id = id });
+            return PartialView("Delete", categoria);
+>>>>>>> 6f3904e1ef769397f15b3f638d17e031b23152fb
         }
 
         // POST: /Categoria/DeleteConfirmed

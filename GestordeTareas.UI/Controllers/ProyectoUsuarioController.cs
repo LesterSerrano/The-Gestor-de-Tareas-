@@ -10,11 +10,11 @@ namespace GestordeTareas.UI.Controllers
         private readonly UsuarioBL _usuarioBL;
         private readonly ProyectoBL _proyectoBL;
 
-        public ProyectoUsuarioController()
+        public ProyectoUsuarioController(ProyectoUsuarioBL proyectoUsuarioBL, UsuarioBL usuarioBL, ProyectoBL proyectoBL)
         {
-            _proyectoUsuarioBL = new ProyectoUsuarioBL();
-            _usuarioBL = new UsuarioBL();
-            _proyectoBL = new ProyectoBL();
+            _proyectoUsuarioBL = proyectoUsuarioBL;
+            _usuarioBL = usuarioBL;
+            _proyectoBL = proyectoBL;
         }
 
         [HttpPost]

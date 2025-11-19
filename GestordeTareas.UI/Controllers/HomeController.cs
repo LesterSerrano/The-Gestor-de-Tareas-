@@ -17,13 +17,13 @@ namespace GestordeTareas.UI.Controllers
         private readonly TareaBL _tareaBL;
         private readonly ProyectoUsuarioBL _proyectoUsuarioBL;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger, UsuarioBL usuarioBL, ProyectoBL proyectoBL, TareaBL tareaBL, ProyectoUsuarioBL proyectoUsuarioBL)
         {
             _logger = logger;
-            _usuarioBL = new UsuarioBL();
-            _proyectoBL = new ProyectoBL();
-            _tareaBL = new TareaBL();
-            _proyectoUsuarioBL = new ProyectoUsuarioBL();
+            _usuarioBL = usuarioBL;
+            _proyectoBL = proyectoBL;
+            _tareaBL = tareaBL;
+            _proyectoUsuarioBL = proyectoUsuarioBL;
         }
 
         public async Task<IActionResult> Index()

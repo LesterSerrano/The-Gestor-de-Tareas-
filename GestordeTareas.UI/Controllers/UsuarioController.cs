@@ -9,7 +9,9 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using GestordeTareas.UI.Helpers;
 using GestordeTareas.DAL;
-using AutoMapper;
+//using AutoMapper;
+using Microsoft.AspNetCore.Authentication.Google;
+using GestordeTareas.BL.Services;
 
 
 namespace GestordeTareas.UI.Controllers
@@ -20,14 +22,16 @@ namespace GestordeTareas.UI.Controllers
         private readonly UsuarioBL _usuarioBL;
         private readonly CargoBL _cargoBL;
         private readonly IEmailService _emailService;
-        private readonly IMapper _mapper;
+        private readonly ISeguridadService _seguridadService;
+        //private readonly IMapper _mapper;
 
-        public UsuarioController(UsuarioBL usuarioBL, CargoBL cargoBL, IEmailService emailService, Imapper mapper)
+        public UsuarioController(UsuarioBL usuarioBL, CargoBL cargoBL, IEmailService emailService, ISeguridadService seguridadService)
         {
             _usuarioBL = usuarioBL;
             _cargoBL = cargoBL;
             _emailService = emailService;
-            _mapper = mapper;
+            _seguridadService = seguridadService;
+            //_mapper = mapper;
         }
 
         #region Helpers
@@ -48,7 +52,7 @@ namespace GestordeTareas.UI.Controllers
             claimsIdentity.AddClaim(new Claim(ClaimTypes.Surname, usuario.Apellido));
 
             claimsIdentity.RemoveClaim(claimsIdentity.FindFirst("FotoPerfil"));
-            claimsIdentity.AddClaim(new Claim("FotoPerfil", usuario.FotoPerfil ?? "/img/usuario.png"));
+            claimsIdentity.AddClaim(new Claim("FotoPerfil", usuario.FotoPerfil ?? "/img/npc.png"));
 
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
         }
@@ -90,6 +94,7 @@ namespace GestordeTareas.UI.Controllers
             return View("Index", lista);
         }
 
+  
         [Authorize]
         public async Task<ActionResult> Perfil()
         {
@@ -97,18 +102,26 @@ namespace GestordeTareas.UI.Controllers
             {
                 await LoadDropDownListsAsync();
 
-                var users = await _usuarioBL.SearchAsync(new Usuario { NombreUsuario = User.Identity.Name, Top_Aux = 1 });
-                var actualUser = users.FirstOrDefault();
+                var idClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+
+                if (idClaim == null || !int.TryParse(idClaim.Value, out int userId))
+                {
+                    TempData["ErrorMessage"] = "Error al identificar el ID de usuario de la sesión.";
+                    return RedirectToAction("Login");
+                }
+
+                // 2. Usar el ID para obtener el usuario directamente (la forma correcta)
+                var actualUser = await _usuarioBL.GetByIdAsync(new Usuario { Id = userId });
+
                 if (actualUser == null) return NotFound();
 
                 ViewBag.NombreUsuario = $"{actualUser.Nombre} {actualUser.Apellido}";
 
-                var usuario = await _usuarioBL.GetByIdAsync(new Usuario { Id = actualUser.Id });
-                return View(usuario);
+                return View(actualUser);
             }
-            catch
+            catch (Exception ex)
             {
-                TempData["ErrorMessage"] = "Ocurrió un error al cargar la información del usuario";
+                TempData["ErrorMessage"] = "Ocurrió un error al cargar la información del usuario: " + ex.Message;
                 return View();
             }
         }
@@ -122,16 +135,134 @@ namespace GestordeTareas.UI.Controllers
         }
 
         [AllowAnonymous]
+        public IActionResult LoginGoogle(string returnUrl = "/")
+        {
+            var properties = new AuthenticationProperties
+            {
+                RedirectUri = Url.Action("GoogleCallback", "Usuario", new { returnUrl })
+            };
+            return Challenge(properties, "Google");
+        }
+
+        [AllowAnonymous]
+        public async Task<IActionResult> GoogleCallback(string returnUrl = "/")
+        {
+            // 1️⃣ Autenticar con el middleware externo
+            var authenticateResult = await HttpContext.AuthenticateAsync("External");
+
+            if (!authenticateResult.Succeeded)
+                return RedirectToAction("Login");
+
+            var claims = authenticateResult.Principal.Claims;
+
+            // 2️⃣ Obtener el email
+            string email = claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
+            if (email == null)
+            {
+                TempData["ErrorMessage"] = "Google no proporcionó un correo electrónico.";
+                return RedirectToAction("Login");
+            }
+
+            // 3️⃣ Obtener el access token para llamar la API de Google
+            string accessToken = authenticateResult.Properties.GetTokenValue("access_token");
+
+            string nombre = claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value ?? "Usuario";
+            string apellido = claims.FirstOrDefault(c => c.Type == ClaimTypes.Surname)?.Value;
+            string foto = null;
+
+            // 4️⃣ Llamar a la API de Google para obtener foto (y otros datos si quieres)
+            if (!string.IsNullOrEmpty(accessToken))
+            {
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+
+                var response = await client.GetAsync("https://www.googleapis.com/oauth2/v2/userinfo");
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    using var doc = System.Text.Json.JsonDocument.Parse(json);
+                    var root = doc.RootElement;
+
+                    nombre = root.GetProperty("given_name").GetString() ?? nombre;
+                    apellido = root.TryGetProperty("family_name", out var fam) ? fam.GetString() : apellido;
+                    foto = root.TryGetProperty("picture", out var pic) ? pic.GetString() : null;
+                }
+            }
+
+            // 5️⃣ Buscar si el usuario ya existe
+            var existingUser = await _usuarioBL.GetByNombreUsuarioAsync(new Usuario { NombreUsuario = email });
+            Usuario userDb;
+
+            if (existingUser == null)
+            {
+                // Crear usuario nuevo
+                userDb = new Usuario
+                {
+                    Nombre = nombre,
+                    Apellido = apellido,
+                    NombreUsuario = email,
+                    Pass = null,
+                    Telefono = null,
+                    FechaNacimiento = null,
+                    Status = (byte)User_Status.ACTIVO,
+                    FechaRegistro = DateTime.Now,
+                    IdCargo = await _cargoBL.GetCargoColaboradorIdAsync(),
+                    FotoPerfil = foto ?? "/img/npc.png"
+                };
+
+                await _usuarioBL.Create(userDb);
+            }
+            else
+            {
+                // Actualizar usuario existente
+                userDb = existingUser;
+
+                userDb.Nombre = nombre;
+                userDb.Apellido = apellido;
+                userDb.FotoPerfil = foto ?? userDb.FotoPerfil;
+
+                await _usuarioBL.Update(userDb);
+            }
+
+            // 6️⃣ Cargar cargo
+            userDb.Cargo = await _cargoBL.GetById(new Cargo { Id = userDb.IdCargo });
+
+            // 7️⃣ Crear claims para la cookie
+            var cookieClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, userDb.NombreUsuario),
+                new Claim(ClaimTypes.Role, userDb.Cargo.Nombre),
+                new Claim(ClaimTypes.GivenName, userDb.Nombre),
+                new Claim(ClaimTypes.Surname, userDb.Apellido ?? ""),
+                new Claim(ClaimTypes.NameIdentifier, userDb.Id.ToString()),
+                new Claim("FotoPerfil", userDb.FotoPerfil ?? "/img/npc.png")
+            };
+
+            var claimsIdentity = new ClaimsIdentity(cookieClaims, CookieAuthenticationDefaults.AuthenticationScheme);
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
+
+            // 8️⃣ Cerrar sesión externa
+            await HttpContext.SignOutAsync("External");
+
+            return Redirect(returnUrl);
+        }
+
+
+
+        [AllowAnonymous]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(Usuario user, string returnUrl = null)
         {
             try
             {
-                var userDb = await _usuarioBL.GetByNombreUsuarioAsync(user);
+                // Login desde la BL
+                var userDb = await _usuarioBL.LoginAsync(user);
+
                 if (userDb == null)
                 {
-                    TempData["ErrorMessage"] = "El correo electrónico ingresado no existe";
+                    TempData["ErrorMessage"] = "Usuario o contraseña incorrectos";
                     return View(new Usuario { NombreUsuario = user.NombreUsuario });
                 }
 
@@ -141,13 +272,7 @@ namespace GestordeTareas.UI.Controllers
                     return View(new Usuario { NombreUsuario = user.NombreUsuario });
                 }
 
-                if (userDb.Pass != UsuarioDAL.HashMD5(user.Pass))
-                {
-                    TempData["ErrorMessage"] = "Contraseña incorrecta";
-                    return View(new Usuario { NombreUsuario = user.NombreUsuario });
-                }
-
-                var fotoPerfil = string.IsNullOrEmpty(userDb.FotoPerfil) ? "/img/usuario.png" : userDb.FotoPerfil;
+                var fotoPerfil = string.IsNullOrEmpty(userDb.FotoPerfil) ? "/img/npc.png" : userDb.FotoPerfil;
                 userDb.Cargo = await _cargoBL.GetById(new Cargo { Id = userDb.IdCargo });
 
                 var claims = new[]
@@ -155,14 +280,18 @@ namespace GestordeTareas.UI.Controllers
                     new Claim(ClaimTypes.Name, userDb.NombreUsuario),
                     new Claim(ClaimTypes.Role, userDb.Cargo.Nombre),
                     new Claim(ClaimTypes.GivenName, userDb.Nombre),
-                    new Claim(ClaimTypes.Surname, userDb.Apellido),
+                    new Claim(ClaimTypes.Surname, userDb.Apellido ?? ""),
                     new Claim(ClaimTypes.NameIdentifier, userDb.Id.ToString()),
                     new Claim("FotoPerfil", fotoPerfil)
                 };
 
-                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)));
+                await HttpContext.SignInAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme,
+                    new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme))
+                );
 
                 if (!string.IsNullOrWhiteSpace(returnUrl)) return Redirect(returnUrl);
+
                 return RedirectToAction("Index", "Home");
             }
             catch (Exception ex)
@@ -171,6 +300,7 @@ namespace GestordeTareas.UI.Controllers
                 return View(new Usuario { NombreUsuario = user.NombreUsuario });
             }
         }
+
 
         [AllowAnonymous]
         public async Task<IActionResult> Logout()
@@ -200,6 +330,7 @@ namespace GestordeTareas.UI.Controllers
                 if (string.IsNullOrEmpty(usuario.Pass) || usuario.Pass.Length < 8)
                 {
                     TempData["ErrorMessage"] = "La contraseña debe tener al menos 8 caracteres";
+                    await LoadDropDownListsAsync();
                     return View(usuario);
                 }
 
@@ -209,6 +340,10 @@ namespace GestordeTareas.UI.Controllers
                 {
                     usuario.FotoPerfil = await ImageHelper.SubirArchivo(fotoPerfil.OpenReadStream(), fotoPerfil.FileName);
                 }
+                else
+                {
+                    usuario.FotoPerfil = "/img/npc.png";
+                }
 
                 if (User.IsInRole("Administrador"))
                 {
@@ -217,12 +352,34 @@ namespace GestordeTareas.UI.Controllers
                     return RedirectToAction(nameof(Index));
                 }
 
-                var cargoColaboradorId = await CargoDAL.GetCargoColaboradorIdAsync();
+                // Asignar el cargo por defecto (Colaborador)
+                var cargoColaboradorId = await _cargoBL.GetCargoColaboradorIdAsync();
                 usuario.IdCargo = cargoColaboradorId;
 
+                // 1. CREAR EL USUARIO
                 await _usuarioBL.Create(usuario);
-                TempData["SuccessMessage"] = "Usuario creado correctamente. Por favor, inicia sesión";
-                return RedirectToAction(nameof(Login));
+
+                // 2. AUTENTICAR AL USUARIO RECIÉN CREADO (SOLUCIÓN)
+                // Cargar cargo para el Claim
+                usuario.Cargo = await _cargoBL.GetById(new Cargo { Id = usuario.IdCargo });
+
+                var claims = new[]
+                {
+                    new Claim(ClaimTypes.Name, usuario.NombreUsuario),
+                    new Claim(ClaimTypes.Role, usuario.Cargo.Nombre),
+                    new Claim(ClaimTypes.GivenName, usuario.Nombre),
+                    new Claim(ClaimTypes.Surname, usuario.Apellido ?? ""),
+                    new Claim(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
+                    new Claim("FotoPerfil", usuario.FotoPerfil ?? "/img/npc.png")
+                };
+
+                await HttpContext.SignInAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme,
+                    new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme))
+                );
+
+                TempData["SuccessMessage"] = "Has iniciado sesión correctamente.";
+                return RedirectToAction("Index", "Home");
             }
             catch (Exception ex)
             {
@@ -283,7 +440,7 @@ namespace GestordeTareas.UI.Controllers
 
                 if (!string.IsNullOrEmpty(usuario.Pass))
                 {
-                    if (UsuarioDAL.HashMD5(currentPassword) != existingUser.Pass)
+                    if (!_seguridadService.VerifyPassword(currentPassword, existingUser.Pass))
                     {
                         TempData["ErrorMessage"] = "Contraseña actual incorrecta";
                         return RedirectToAction("Perfil");
@@ -295,7 +452,7 @@ namespace GestordeTareas.UI.Controllers
                         return RedirectToAction("Perfil");
                     }
 
-                    existingUser.Pass = UsuarioDAL.HashMD5(usuario.Pass);
+                    existingUser.Pass = _seguridadService.HashPassword(usuario.Pass);
                 }
 
                 existingUser.Nombre = usuario.Nombre;
@@ -306,7 +463,8 @@ namespace GestordeTareas.UI.Controllers
 
                 if (fotoPerfil != null && fotoPerfil.Length > 0)
                 {
-                    existingUser.FotoPerfil = await ImageHelper.SubirArchivo(fotoPerfil.OpenReadStream(), fotoPerfil.FileName);
+                    existingUser.FotoPerfil =
+                        await ImageHelper.SubirArchivo(fotoPerfil.OpenReadStream(), fotoPerfil.FileName);
                 }
 
                 await _usuarioBL.Update(existingUser);
@@ -321,6 +479,7 @@ namespace GestordeTareas.UI.Controllers
                 return RedirectToAction("Perfil");
             }
         }
+
 
         [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> Delete(int id)

@@ -14,6 +14,7 @@ namespace GestordeTareas.DAL
         public ContextoBD(DbContextOptions<ContextoBD> options) : base(options)
         {
         }
+
         public DbSet<Categoria> Categoria { get; set; }
         public DbSet<Cargo> Cargo { get; set; }
         public DbSet<Prioridad> Prioridad { get; set; }

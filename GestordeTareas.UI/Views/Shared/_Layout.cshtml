@@ -76,7 +76,7 @@
                             <div class="relative box-content flex items-center justify-center overflow-hidden rounded-full w-12 h-12 shadow-md border-2 bg-purple-100 border-borderColor">
                                 <img src="@(!string.IsNullOrEmpty(User.Claims.FirstOrDefault(c => c.Type == "FotoPerfil")?.Value)
                                 ? User.Claims.FirstOrDefault(c => c.Type == "FotoPerfil")?.Value
-                                : Url.Content("~/img/usuario.png"))"
+                                : Url.Content("~/img/npc.png"))"
                                      alt="Foto de perfil"
                                      class="w-full h-full object-cover">
                             </div>
@@ -411,7 +411,7 @@
 
     </script>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/js/alerts.js"></script>
+    <script src="~/js/Alerts.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 
 </body>

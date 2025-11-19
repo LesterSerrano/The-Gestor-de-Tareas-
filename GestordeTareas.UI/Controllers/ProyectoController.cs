@@ -16,12 +16,17 @@ namespace GestordeTareas.UI.Controllers
         private readonly InvitacionProyectoBL _invitacionProyectoBL;
         private readonly IEmailService _emailService;
 
-        public ProyectoController(IEmailService emailService)
+        public ProyectoController(
+            ProyectoUsuarioBL proyectoUsuarioBL,
+            ProyectoBL proyectoBL,
+            UsuarioBL usuarioBL,
+            InvitacionProyectoBL invitacionProyectoBL,
+            IEmailService emailService)
         {
-            _proyectoUsuarioBL = new ProyectoUsuarioBL();
-            _proyectoBL = new ProyectoBL();
-            _usuarioBL = new UsuarioBL();
-            _invitacionProyectoBL = new InvitacionProyectoBL();
+            _proyectoUsuarioBL = proyectoUsuarioBL;
+            _proyectoBL = proyectoBL;
+            _usuarioBL = usuarioBL;
+            _invitacionProyectoBL = invitacionProyectoBL;
             _emailService = emailService;
         }
 
