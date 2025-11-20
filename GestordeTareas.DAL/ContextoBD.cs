@@ -30,6 +30,10 @@ namespace GestordeTareas.DAL
         public DbSet<PasswordResetCode> PasswordResetCode { get; set; }
         public DbSet<Comment> Comment { get; set; }
 
+        // ------------aqui voy a ver si funciona lo del los comentarios
+        public DbSet<ComentarioTarea> ComentarioTarea { get; set; }
+        public DbSet<ComentarioTareaReaccion> ComentarioTareaReaccion { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

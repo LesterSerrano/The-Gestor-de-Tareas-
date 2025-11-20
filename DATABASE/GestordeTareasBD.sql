@@ -83,6 +83,55 @@ CREATE TABLE Tarea (
 
 GO
 
+---comentario lo de la tarea y reacciones
+
+CREATE TABLE ComentarioTarea (
+    Id INT NOT NULL PRIMARY KEY IDENTITY(1,1),
+
+    IdTarea INT NOT NULL,
+    IdUsuario INT NOT NULL,
+
+    Comentario NVARCHAR(500) NOT NULL,
+    FechaCreacion DATETIME NOT NULL DEFAULT GETDATE(),
+
+    IdComentarioPadre INT NULL,   -- Respuestas / hilo
+    Estado TINYINT NOT NULL DEFAULT 1, -- 1=Activo, 0=Eliminado
+
+    CONSTRAINT FK_ComentarioTarea_Tarea 
+        FOREIGN KEY (IdTarea) REFERENCES Tarea(Id) ON DELETE CASCADE,
+
+    CONSTRAINT FK_ComentarioTarea_Usuario 
+        FOREIGN KEY (IdUsuario) REFERENCES Usuario(Id),
+
+    CONSTRAINT FK_ComentarioTarea_Padre 
+        FOREIGN KEY (IdComentarioPadre) REFERENCES ComentarioTarea(Id) ON DELETE CASCADE
+);
+GO
+CREATE TABLE ComentarioTareaReaccion (
+    Id INT NOT NULL PRIMARY KEY IDENTITY(1,1),
+
+    IdComentario INT NOT NULL,
+    IdUsuario INT NOT NULL,
+
+    -- 1 = Me gusta 👍
+    -- 2 = Me encanta ❤️
+    -- 3 = Incógnito 😶
+    TipoReaccion TINYINT NOT NULL,
+
+    Fecha DATETIME NOT NULL DEFAULT GETDATE(),
+
+    CONSTRAINT FK_Reaccion_Comentario 
+        FOREIGN KEY (IdComentario) REFERENCES ComentarioTarea(Id) ON DELETE CASCADE,
+
+    CONSTRAINT FK_Reaccion_Usuario 
+        FOREIGN KEY (IdUsuario) REFERENCES Usuario(Id),
+
+    -- Un usuario solo puede reaccionar 1 vez por comentario
+    CONSTRAINT UQ_Reaccion UNIQUE (IdComentario, IdUsuario)
+);
+GO
+
+
 
 -- Cuando se asignan las tareas y le aparecen al colaborador, elegirá una
 CREATE TABLE ElegirTarea (
