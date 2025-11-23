@@ -15,8 +15,9 @@ namespace GestordeTareas.DAL.Interfaces
         // Eliminar completamente (DELETE físico en DB)
         Task<bool> EliminarComentarioTotalAsync(int idComent);
 
+
         // Obtener un comentario específico por ID
-        Task<ComentarioTarea> ObtenerPorIdAsync(int idComent);
+        Task<ComentarioTarea> ObtenerComentarioPorIdAsync(int idComent);
 
         // Obtener todos los comentarios de una tarea
         Task<IEnumerable<ComentarioTarea>> ObtenerComentariosPorTareaAsync(int idTask);
